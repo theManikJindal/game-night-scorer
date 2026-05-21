@@ -24,6 +24,13 @@ export function init() {
   // Close on backdrop click
   backdrop.addEventListener('click', hide);
 
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay.style.display === 'block') {
+      hide();
+    }
+  });
+
   // Bind menu actions
   overlay.querySelectorAll('.host-menu-action').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -67,12 +74,26 @@ export function toggle() {
 export function show() {
   init();
   const overlay = document.getElementById('host-menu-overlay');
-  if (overlay) overlay.style.display = 'block';
+  if (overlay) {
+    overlay.style.display = 'block';
+
+    // Manage focus: focus first interactive element
+    requestAnimationFrame(() => {
+      const firstAction = overlay.querySelector('.host-menu-action');
+      if (firstAction) firstAction.focus();
+    });
+  }
 }
 
 export function hide() {
   const overlay = document.getElementById('host-menu-overlay');
-  if (overlay) overlay.style.display = 'none';
+  if (overlay) {
+    overlay.style.display = 'none';
+
+    // Manage focus: return to trigger element
+    const trigger = document.getElementById('btn-host-menu-trigger');
+    if (trigger) trigger.focus();
+  }
 }
 
 /**

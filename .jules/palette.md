@@ -9,3 +9,7 @@
 ## 2026-04-30 - Aria Hidden Icons
 **Learning:** Screen readers announce text-based ligatures out loud. Using `.material-symbols-outlined` with text like 'arrow_forward' means the screen reader says "arrow forward".
 **Action:** When adding decorative icons or icons embedded inside buttons with text, always include `aria-hidden="true"` to hide the ligature text from assistive tech.
+
+## 2024-05-20 - Focus Management in Custom Overlays
+**Learning:** When building custom interactive overlays (like a host menu) in Vanilla JS that toggle display state using `display: none` and `display: block`, simply calling `.focus()` immediately on an element within the overlay will often fail. The browser needs time to render the element and make it focusable.
+**Action:** When shifting focus to an element that just became visible, always wrap the `.focus()` call inside a `requestAnimationFrame()` callback to ensure the DOM has updated. Additionally, always remember to add `role="dialog"`, `aria-modal="true"`, and an `aria-label` to custom overlay containers to ensure screen readers correctly interpret them as modal dialogs, and ensure the `Escape` key closes them while returning focus to the trigger.
