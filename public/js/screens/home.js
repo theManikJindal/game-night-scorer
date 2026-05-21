@@ -102,7 +102,7 @@ export function mount(container) {
     }
 
     const pin = container.querySelector('#input-pin').value.trim().toUpperCase();
-    if (pin.length < 4) {
+    if (!/^[A-Z]{4}[0-9]{2}$/.test(pin)) {
       toast.show('Enter a valid room PIN');
       _shakeInput(container.querySelector('#input-pin'));
       return;

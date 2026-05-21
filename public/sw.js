@@ -33,6 +33,7 @@ const APP_SHELL = [
   '/js/cache.js',
   '/js/stats.js',
   '/js/utils.js',
+  '/js/wordlist.js',
   // Screens
   '/js/screens/home.js',
   '/js/screens/lobby.js',

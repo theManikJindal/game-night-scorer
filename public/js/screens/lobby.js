@@ -51,7 +51,7 @@ export function mount(container, params = {}) {
       <div id="host-controls" style="display:none">
         <h2 class="font-headline font-extrabold uppercase text-sm tracking-widest mb-4">PLAYERS</h2>
 
-        <!-- Always-visible inline add (hidden during playing — new players can't join mid-game) -->
+        <!-- Always-visible inline add. Mid-game adds are allowed; the new player joins the next game. -->
         <div id="add-player-row" class="flex gap-2 mb-4">
           <label for="input-player-name" class="sr-only">Player name...</label>
           <input
@@ -299,10 +299,12 @@ function _startWatching(roomCode, container) {
       return;
     }
 
-    // Render player list (mid-game: hide Add + Remove; Deactivate toggle still available)
+    // Render player list. Mid-game: Add is allowed (new player joins the
+    // next game — the active game's playerIds/snapshot are frozen), but
+    // Remove is still hidden per-row to protect active participants.
     const isPlaying = meta.status === 'playing';
     const addRow = container.querySelector('#add-player-row');
-    if (addRow) addRow.style.display = (isHost && !isPlaying) ? 'flex' : 'none';
+    if (addRow) addRow.style.display = isHost ? 'flex' : 'none';
     _renderPlayers(container, players, isHost, roomCode, isPlaying);
 
     // Remove host prompt if host player has been set

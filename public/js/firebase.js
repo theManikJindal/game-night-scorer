@@ -4,6 +4,7 @@
 
 import * as state from './state.js';
 import * as cache from './cache.js';
+import { WORDS } from './wordlist.js';
 
 let db = null;
 let _roomUnsub = null;
@@ -32,14 +33,14 @@ export function isConfigured() {
 // ── Room Code Generation ──
 
 function generateCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1 for clarity
-  const array = new Uint32Array(6);
+  // 4-letter word + 2 digits (e.g. GAME42). Easier to share verbally
+  // than a random 6-char alphanumeric. createRoom handles collisions by
+  // retrying — namespace is ~96k codes.
+  const array = new Uint32Array(2);
   crypto.getRandomValues(array);
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars[array[i] % chars.length];
-  }
-  return code;
+  const word = WORDS[array[0] % WORDS.length];
+  const digits = String(array[1] % 100).padStart(2, '0');
+  return word + digits;
 }
 
 function generateKey() {
@@ -54,7 +55,19 @@ function generateKey() {
 export async function createRoom() {
   if (!db) throw new Error('Firebase not configured');
 
-  const roomCode = generateCode();
+  // The word+digits namespace is small enough (~100k) that collisions are
+  // realistic, so check-then-write with a few retries.
+  let roomCode;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const candidate = generateCode();
+    const snap = await db.ref(`rooms/${candidate}/meta`).once('value');
+    if (!snap.exists()) {
+      roomCode = candidate;
+      break;
+    }
+  }
+  if (!roomCode) throw new Error('Could not allocate a room code, try again');
+
   const hostKey = generateKey();
   const now = Date.now();
 
