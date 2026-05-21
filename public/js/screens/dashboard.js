@@ -79,7 +79,7 @@ function _render(container, roomCode) {
     document.getElementById('top-bar-title').textContent = 'GAME NIGHT';
     content.innerHTML = `
       <div class="text-center py-20">
-        <span class="material-symbols-outlined text-5xl text-outline mb-4">casino</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-5xl text-outline mb-4">casino</span>
         <p class="font-headline font-bold text-lg uppercase mb-2">No Active Game</p>
         <p class="font-body text-sm text-on-surface-variant">
           ${isHost ? 'Go back to the lobby to start a game.' : 'Waiting for the host to start a game...'}

@@ -25,7 +25,7 @@ export function mount(container) {
       <div class="w-full max-w-xs space-y-3 mb-12">
         <button id="btn-create" class="btn-primary flex items-center justify-center gap-2">
           CREATE SESSION
-          <span class="material-symbols-outlined text-lg">arrow_forward</span>
+          <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>
         </button>
       </div>
 
@@ -90,7 +90,7 @@ export function mount(container) {
       console.error('Create room failed:', e);
       toast.show('Failed to create room');
       btn.disabled = false;
-      btn.innerHTML = 'CREATE SESSION <span class="material-symbols-outlined text-lg">arrow_forward</span>';
+      btn.innerHTML = 'CREATE SESSION <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>';
     }
   });
 

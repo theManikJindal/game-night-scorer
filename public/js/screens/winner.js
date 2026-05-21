@@ -45,7 +45,7 @@ export function mount(container, params = {}) {
       <main class="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-8">
         <div class="text-center w-full max-w-sm mx-auto mb-12">
           <div class="flex items-center justify-center gap-2 mb-4">
-            <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
             <span class="font-mono text-sm uppercase tracking-widest opacity-80">WINNER</span>
           </div>
 

@@ -30,7 +30,7 @@ export function mount(container, params = {}) {
     backBtn.onclick = () => router.navigate('lobby', { roomCode }, 'back');
   }
   document.getElementById('top-bar-actions').innerHTML = locked
-    ? `<span class="font-mono text-[10px] text-outline border border-outline px-2 py-1 flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">lock</span>LOCKED</span>`
+    ? `<span class="font-mono text-[10px] text-outline border border-outline px-2 py-1 flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[12px]">lock</span>LOCKED</span>`
     : '';
 
   if (!roomCode) {
@@ -78,7 +78,7 @@ export function mount(container, params = {}) {
       html += `
         <div class="bg-primary text-on-primary p-6 mb-8">
           <div class="flex items-center gap-2 mb-2">
-            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+            <span aria-hidden="true" class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
             <span class="font-mono text-[10px] uppercase tracking-widest opacity-80">MOST VALUABLE PLAYER</span>
           </div>
           <h3 class="font-headline font-black text-3xl uppercase tracking-tight">${escapeHTML(mvp.name)}</h3>
@@ -92,7 +92,7 @@ export function mount(container, params = {}) {
   html += `
     <section class="mb-10">
       <h3 class="font-headline font-extrabold uppercase text-sm tracking-widest mb-4 flex items-center gap-2">
-        <span class="material-symbols-outlined text-sm">leaderboard</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-sm">leaderboard</span>
         OVERALL STANDINGS
       </h3>
       <div class="border border-outline overflow-hidden">
@@ -140,7 +140,7 @@ export function mount(container, params = {}) {
       const w = game.snapshot[game.winner];
       html += `
         <div class="bg-surface-container-high border border-outline p-3 mb-3 flex items-center gap-3">
-          <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+          <span aria-hidden="true" class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
           <span class="font-headline font-bold text-sm uppercase">${escapeHTML(w.name)}</span>
           <span class="font-mono text-[10px] text-outline ml-auto">WINNER</span>
         </div>
@@ -148,7 +148,7 @@ export function mount(container, params = {}) {
     } else if (game.isAbandoned) {
       html += `
         <div class="bg-surface-container-high border border-outline-variant p-3 mb-3 flex items-center gap-3">
-          <span class="material-symbols-outlined text-sm text-outline">cancel</span>
+          <span aria-hidden="true" class="material-symbols-outlined text-sm text-outline">cancel</span>
           <span class="font-headline font-bold text-sm uppercase text-outline">INCONCLUSIVE</span>
           <span class="font-mono text-[10px] text-outline ml-auto">NO WINNER</span>
         </div>
@@ -209,7 +209,7 @@ export function mount(container, params = {}) {
       html += `
         <div class="mt-8 space-y-3">
           <button id="btn-start-new-night" class="btn-primary w-full flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-lg">restart_alt</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-lg">restart_alt</span>
             START NEW NIGHT
           </button>
           <p class="font-mono text-[10px] text-outline text-center uppercase">KEEPS PLAYERS, CLEARS GAMES, UNLOCKS THE ROOM</p>
@@ -226,7 +226,7 @@ export function mount(container, params = {}) {
     html += `
       <div class="mt-8">
         <button id="btn-back-lobby" class="btn-secondary w-full flex items-center justify-center gap-2">
-          <span class="material-symbols-outlined text-lg">arrow_back</span>
+          <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_back</span>
           BACK TO LOBBY
         </button>
       </div>
@@ -261,7 +261,7 @@ function _renderStartNewNightFooter(container, roomCode) {
   footer.className = 'p-6 pb-12';
   footer.innerHTML = `
     <button id="btn-start-new-night" class="btn-primary w-full flex items-center justify-center gap-2">
-      <span class="material-symbols-outlined text-lg">restart_alt</span>
+      <span aria-hidden="true" class="material-symbols-outlined text-lg">restart_alt</span>
       START NEW NIGHT
     </button>
     <p class="font-mono text-[10px] text-outline text-center uppercase mt-2">UNLOCKS THE ROOM FOR A FRESH NIGHT</p>

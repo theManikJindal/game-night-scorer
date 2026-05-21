@@ -97,7 +97,7 @@ export function mount(container, params = {}) {
       <!-- Night Recap (visible after at least 1 game, only if tracking) -->
       <div id="recap-section" class="mt-6" style="display:none">
         <button id="btn-recap" class="w-full bg-surface-container-lowest border border-outline py-3 font-headline font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors">
-          <span class="material-symbols-outlined text-sm">bar_chart</span>
+          <span aria-hidden="true" class="material-symbols-outlined text-sm">bar_chart</span>
           NIGHT RECAP
         </button>
       </div>
@@ -106,7 +106,7 @@ export function mount(container, params = {}) {
       <div id="start-section" class="mt-4" style="display:none">
         <button id="btn-start-game" class="btn-primary flex items-center justify-center gap-2" disabled>
           CHOOSE GAME
-          <span class="material-symbols-outlined text-lg">arrow_forward</span>
+          <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>
         </button>
         <p id="start-hint" class="font-mono text-[10px] text-outline text-center mt-2 uppercase">ADD AT LEAST 2 PLAYERS</p>
       </div>
@@ -114,7 +114,7 @@ export function mount(container, params = {}) {
       <!-- Call it a Night (host only, visible after at least 1 finished game, between games) -->
       <div id="call-night-section" class="mt-3" style="display:none">
         <button id="btn-call-night" class="w-full bg-surface-container-lowest border border-outline py-3 font-headline font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors">
-          <span class="material-symbols-outlined text-sm">bedtime</span>
+          <span aria-hidden="true" class="material-symbols-outlined text-sm">bedtime</span>
           CALL IT A NIGHT
         </button>
         <p class="font-mono text-[10px] text-outline text-center mt-2 uppercase">LOCKS THE NIGHT AND SHOWS THE RECAP TO EVERYONE</p>
@@ -365,7 +365,7 @@ function _startWatching(roomCode, container) {
         btn.disabled = false;
         hint.textContent = '';
       } else if (meta.status === 'lobby') {
-        btn.innerHTML = 'CHOOSE GAME <span class="material-symbols-outlined text-lg">arrow_forward</span>';
+        btn.innerHTML = 'CHOOSE GAME <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>';
         btn.disabled = activeCount < 2;
         hint.textContent = activeCount < 2 ? 'ADD AT LEAST 2 PLAYERS' : `${activeCount} PLAYERS READY`;
       } else {
@@ -384,7 +384,7 @@ function _renderPlayers(container, players, isHost, roomCode, isPlaying = false)
   if (sorted.length === 0) {
     list.innerHTML = `
       <div class="text-center py-12">
-        <span class="material-symbols-outlined text-4xl text-outline mb-2">group_add</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-4xl text-outline mb-2">group_add</span>
         <p class="font-body text-sm text-on-surface-variant">${isHost ? 'Add at least 2 players to start a game.<br>Names show up here in the order you add them.' : 'Waiting for the host to add players\u2026'}</p>
       </div>
     `;
@@ -413,14 +413,14 @@ function _renderPlayers(container, players, isHost, roomCode, isPlaying = false)
             ${isHost ? `
               <div class="flex gap-1">
                 <button class="player-set-host p-1.5 hover:bg-surface-container-high transition-colors ${isHostPlayer ? 'opacity-30' : ''}" data-id="${escapeHTML(p.id)}" title="Set as host player" aria-label="Set ${escapeHTML(p.name)} as host player">
-                  <span class="material-symbols-outlined text-sm">${isHostPlayer ? 'shield_person' : 'person'}</span>
+                  <span aria-hidden="true" class="material-symbols-outlined text-sm">${isHostPlayer ? 'shield_person' : 'person'}</span>
                 </button>
                 <button class="player-toggle p-1.5 hover:bg-surface-container-high transition-colors" data-id="${escapeHTML(p.id)}" data-active="${p.isActive}" title="${p.isActive ? 'Deactivate' : 'Activate'}" aria-label="${p.isActive ? 'Deactivate' : 'Activate'} ${escapeHTML(p.name)}">
-                  <span class="material-symbols-outlined text-sm">${p.isActive ? 'person_off' : 'person_add'}</span>
+                  <span aria-hidden="true" class="material-symbols-outlined text-sm">${p.isActive ? 'person_off' : 'person_add'}</span>
                 </button>
                 ${isPlaying ? '' : `
                 <button class="player-remove p-1.5 hover:bg-surface-container-high transition-colors" data-id="${escapeHTML(p.id)}" title="Remove" aria-label="Remove ${escapeHTML(p.name)}">
-                  <span class="material-symbols-outlined text-sm text-error">close</span>
+                  <span aria-hidden="true" class="material-symbols-outlined text-sm text-error">close</span>
                 </button>
                 `}
               </div>
@@ -435,7 +435,7 @@ function _renderPlayers(container, players, isHost, roomCode, isPlaying = false)
   if (isHost && !hostPlayerId && sorted.length > 0) {
     list.insertAdjacentHTML('beforeend', `
       <p class="font-mono text-[10px] text-outline text-center mt-2 uppercase">
-        <span class="material-symbols-outlined text-[10px] align-middle">info</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[10px] align-middle">info</span>
         TAP THE PERSON ICON TO MARK HOST PLAYER
       </p>
     `);

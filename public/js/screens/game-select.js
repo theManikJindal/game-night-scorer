@@ -96,7 +96,7 @@ function _renderSelection(container) {
       card.style.background = '#ffffff';
       card.style.borderLeft = '4px solid #000000';
       indicator.className = 'game-check w-7 h-7 bg-primary border-2 border-primary flex items-center justify-center transition-all';
-      indicator.innerHTML = '<span class="material-symbols-outlined text-white text-base">check</span>';
+      indicator.innerHTML = '<span aria-hidden="true" class="material-symbols-outlined text-white text-base">check</span>';
     } else {
       card.style.borderColor = '';
       card.style.borderWidth = '';
@@ -112,7 +112,7 @@ function _renderSelection(container) {
   if (_selectedGame) {
     const game = getGame(_selectedGame);
     startBtn.disabled = false;
-    startBtn.innerHTML = `START ${game.label.toUpperCase()} <span class="material-symbols-outlined text-lg">arrow_forward</span>`;
+    startBtn.innerHTML = `START ${game.label.toUpperCase()} <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>`;
   } else {
     startBtn.disabled = true;
     startBtn.innerHTML = `SELECT A GAME`;
@@ -249,6 +249,6 @@ async function _startGame(container, roomCode) {
     console.error('Start game failed:', e);
     toast.show('Failed to start game');
     btn.disabled = false;
-    btn.innerHTML = 'START GAME <span class="material-symbols-outlined text-lg">arrow_forward</span>';
+    btn.innerHTML = 'START GAME <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>';
   }
 }

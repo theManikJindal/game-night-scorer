@@ -71,7 +71,7 @@ function _render(container, roomCode) {
   if (activePlayerIds.length === 0) {
     container.innerHTML = `
       <div class="p-6 text-center py-20">
-        <span class="material-symbols-outlined text-5xl text-outline mb-4">person_off</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-5xl text-outline mb-4">person_off</span>
         <p class="font-headline font-bold text-lg uppercase mb-2">No Active Players</p>
         <p class="font-body text-sm text-on-surface-variant">Reactivate at least one player from Manage Players to continue.</p>
       </div>
@@ -85,7 +85,7 @@ function _render(container, roomCode) {
     if (rounds.length >= limit && game.status === 'active') {
       container.innerHTML = `
         <div class="p-6 text-center py-20">
-          <span class="material-symbols-outlined text-5xl text-outline mb-4">check_circle</span>
+          <span aria-hidden="true" class="material-symbols-outlined text-5xl text-outline mb-4">check_circle</span>
           <p class="font-headline font-bold text-lg uppercase mb-2">All Rounds Complete</p>
           <p class="font-body text-sm text-on-surface-variant">Determining winner...</p>
         </div>
@@ -151,7 +151,7 @@ function _render(container, roomCode) {
       <div class="mt-6 space-y-3">
         <button id="btn-submit-round" class="btn-primary flex items-center justify-center gap-2">
           CONFIRM ROUND
-          <span class="material-symbols-outlined text-lg">check</span>
+          <span aria-hidden="true" class="material-symbols-outlined text-lg">check</span>
         </button>
         <div id="validation-error" class="font-mono text-[10px] text-error text-center uppercase" style="display:none"></div>
       </div>
@@ -337,6 +337,6 @@ async function _submitRound(container, roomCode, initialGame, gameModule) {
     console.error('Submit round failed:', e);
     toast.show('Submit failed');
     btn.disabled = false;
-    btn.innerHTML = 'CONFIRM ROUND <span class="material-symbols-outlined text-lg">check</span>';
+    btn.innerHTML = 'CONFIRM ROUND <span aria-hidden="true" class="material-symbols-outlined text-lg">check</span>';
   }
 }
