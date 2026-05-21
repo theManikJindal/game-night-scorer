@@ -14,7 +14,7 @@ html, body {
 }
 
 body {
-  min-height: 100dvh;
+  height: 100dvh;
 }
 
 /* ── Screen ── */
@@ -22,9 +22,13 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  height: 100%;
   padding-bottom: calc(80px + env(safe-area-inset-bottom, 0));
 }
 
+.screen.no-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
 .screen.active {
   display: block;
 }

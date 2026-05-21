@@ -22,6 +22,11 @@ let _activeTab = 'dashboard';
 export function show(activeTab = 'dashboard') {
   const nav = document.getElementById('bottom-nav');
   nav.style.display = 'flex';
+
+  // Remove no-nav from current active screen
+  const activeScreen = document.querySelector('.screen.active');
+  if (activeScreen) activeScreen.classList.remove('no-nav');
+
   _activeTab = activeTab;
   render();
 }
@@ -29,6 +34,10 @@ export function show(activeTab = 'dashboard') {
 export function hide() {
   const nav = document.getElementById('bottom-nav');
   nav.style.display = 'none';
+
+  // Add no-nav to current active screen
+  const activeScreen = document.querySelector('.screen.active');
+  if (activeScreen) activeScreen.classList.add('no-nav');
 }
 
 export function setActive(tabId) {

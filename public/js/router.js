@@ -80,6 +80,13 @@ function _renderScreen(screenId, params = {}) {
   // Mount new screen
   const el = document.createElement('div');
   el.className = 'screen active';
+
+  // If bottom nav is hidden, ensure this screen doesn't have nav padding
+  const nav = document.getElementById('bottom-nav');
+  if (nav && nav.style.display === 'none') {
+    el.classList.add('no-nav');
+  }
+
   el.id = `screen-${screenId}`;
   _container.appendChild(el);
 

@@ -13,7 +13,7 @@ export function mount(container) {
   document.getElementById('top-bar').style.display = 'none';
 
   container.innerHTML = `
-    <div class="flex flex-col items-center justify-center min-h-[100dvh] px-6">
+    <div class="flex flex-col items-center justify-center h-full px-6">
       <!-- Logo -->
       <div class="text-center mb-16">
         <p class="font-mono text-[10px] uppercase tracking-[0.2em] text-outline mb-3">System.Ref_01</p>

@@ -40,7 +40,7 @@ export function mount(container, params = {}) {
   const winnerColor = ACCENT_COLORS[winner.accentIndex || 0];
 
   container.innerHTML = `
-    <div class="min-h-[100dvh] flex flex-col bg-primary text-on-primary">
+    <div class="h-full flex flex-col bg-primary text-on-primary">
       <!-- Hero -->
       <main class="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-8">
         <div class="text-center w-full max-w-sm mx-auto mb-12">
