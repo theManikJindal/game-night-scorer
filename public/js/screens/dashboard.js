@@ -567,31 +567,35 @@ async function _pushLiveTotals(roomCode, game) {
 //  12 +2 +4 +6
 //  +8 +10 ×2 DONE
 // Grid layout (5 cols × 4 rows):
-// ---  +6  +8  +10  ×2
-// +4   12  11   10   9
-// +2    8   7    6   5
-//  4    3   2    1   0
+// +2  +4  +6  +8  +10
+// ×2  12  11  10    9
+//  8   7   6   5    4
+//  3   2   1   0  ---
 const _F7_CARD_DATA = [
-  { empty: true },
+  // Row 0: action cards
+  { cls: 'flip7-action-btn', attr: 'data-action', val:  2, col: 3, row: 2 },
+  { cls: 'flip7-action-btn', attr: 'data-action', val:  4, col: 4, row: 2 },
   { cls: 'flip7-action-btn', attr: 'data-action', val:  6, col: 5, row: 2 },
   { cls: 'flip7-action-btn', attr: 'data-action', val:  8, col: 6, row: 0 },
   { cls: 'flip7-action-btn', attr: 'data-action', val: 10, col: 2, row: 2 },
+  // Row 1: x2 + high numbers
   { id: 'flip7-x2-btn', col: 1, row: 3 },
-  { cls: 'flip7-action-btn', attr: 'data-action', val:  4, col: 4, row: 2 },
   { cls: 'flip7-num-btn',    attr: 'data-num',    val: 12, col: 4, row: 0 },
   { cls: 'flip7-num-btn',    attr: 'data-num',    val: 11, col: 3, row: 0 },
   { cls: 'flip7-num-btn',    attr: 'data-num',    val: 10, col: 2, row: 0 },
   { cls: 'flip7-num-btn',    attr: 'data-num',    val:  9, col: 0, row: 2 },
-  { cls: 'flip7-action-btn', attr: 'data-action', val:  2, col: 3, row: 2 },
+  // Row 2: mid numbers
   { cls: 'flip7-num-btn',    attr: 'data-num',    val:  8, col: 5, row: 1 },
   { cls: 'flip7-num-btn',    attr: 'data-num',    val:  7, col: 4, row: 1 },
   { cls: 'flip7-num-btn',    attr: 'data-num',    val:  6, col: 3, row: 1 },
   { cls: 'flip7-num-btn',    attr: 'data-num',    val:  5, col: 2, row: 1 },
   { cls: 'flip7-num-btn',    attr: 'data-num',    val:  4, col: 1, row: 1 },
+  // Row 3: low numbers + clear
   { cls: 'flip7-num-btn',    attr: 'data-num',    val:  3, col: 0, row: 1 },
   { cls: 'flip7-num-btn',    attr: 'data-num',    val:  2, col: 5, row: 0 },
   { cls: 'flip7-num-btn',    attr: 'data-num',    val:  1, col: 1, row: 0 },
   { cls: 'flip7-num-btn',    attr: 'data-num',    val:  0, col: 0, row: 0 },
+  { empty: true },
 ];
 
 // Returns inline background CSS for a single card sprite cell (fully responsive).
@@ -617,7 +621,7 @@ function _openFlip7Drawer(container, roomCode, playerId, snapshot, game) {
 
   // Build all 20 grid cells using the spritesheet
   const cardBtns = _F7_CARD_DATA.map((c) => {
-    if (c.empty) return `<button type="button" id="flip7-clear-btn" class="font-mono text-[10px] uppercase tracking-widest text-outline flex items-center justify-center" style="aspect-ratio:130/204;transition:transform 120ms ease,opacity 120ms ease">clear</button>`;
+    if (c.empty) return `<div class="flex items-center justify-center" style="aspect-ratio:130/204"><button type="button" id="flip7-done-btn" aria-label="Done" class="flex items-center justify-center border-2 border-primary text-primary hover:bg-primary hover:text-on-primary transition-colors" style="width:75%;aspect-ratio:130/204;box-shadow:0 3px 5px -1px rgba(0,0,0,0.18)"><span aria-hidden="true" class="material-symbols-outlined" style="font-size:20px">check</span></button></div>`;
     const bg = _cardSpriteBg(c.col, c.row);
     const cardStyle = `aspect-ratio:130/204;border-radius:6px;box-shadow:0 3px 5px -1px rgba(0,0,0,0.18);${bg}`;
     if (c.id) {
@@ -646,10 +650,7 @@ function _openFlip7Drawer(container, roomCode, playerId, snapshot, game) {
             <p id="flip7-header-score" class="font-mono text-4xl font-bold leading-none">0</p>
             <p id="flip7-header-label" class="font-mono text-[9px] text-outline mt-0.5 uppercase tracking-widest">THIS ROUND</p>
           </div>
-          <div class="text-right">
-            <p class="font-headline font-bold text-sm uppercase truncate">${name}</p>
-            <p class="font-mono text-[10px] text-outline">${total} PTS TOTAL</p>
-          </div>
+          <p class="font-headline font-bold text-4xl uppercase truncate">${name}</p>
         </div>
       </div>
       <!-- Scrollable 5-col card grid -->
@@ -723,22 +724,20 @@ function _bindDrawerEvents(container, roomCode, playerId) {
   if (!draft) return;
 
   _flip7DrawerEl.querySelector('#flip7-drawer-backdrop')?.addEventListener('click', () => {
-    const game = state.currentGame();
-    if (game) _pushLiveTotals(roomCode, game).catch(() => {});
     _closeFlip7Drawer();
     _render(container, roomCode);
   });
 
-  _flip7DrawerEl.querySelector('#flip7-clear-btn')?.addEventListener('click', (e) => {
+  _flip7DrawerEl.querySelector('#flip7-done-btn')?.addEventListener('click', (e) => {
     const btn = e.currentTarget;
-    btn.style.transform = 'scale(0.82)';
-    btn.style.opacity = '0.4';
-    setTimeout(() => { btn.style.transform = ''; btn.style.opacity = ''; }, 150);
-    draft.numbers.clear();
-    draft.actions.clear();
-    draft.x2 = false;
-    _refreshDrawerCardStates(playerId);
-    _updateDrawerScore(playerId);
+    btn.style.background = '#000';
+    btn.style.color = '#fff';
+    setTimeout(() => {
+      const game = state.currentGame();
+      if (game) _pushLiveTotals(roomCode, game).catch(() => {});
+      _closeFlip7Drawer();
+      _render(container, roomCode);
+    }, 150);
   });
 
   // ── Card selection (blocked in drag mode) ──
