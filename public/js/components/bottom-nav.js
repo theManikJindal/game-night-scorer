@@ -51,7 +51,10 @@ export function getActive() {
 
 function render() {
   const nav = document.getElementById('bottom-nav');
-  const tabs = state.isHost() ? TABS.host : TABS.viewer;
+  const game = state.currentGame();
+  // Flip 7 uses inline scoring on the dashboard — no separate scoring tab needed
+  const hostTabs = game?.type === 'flip7' ? TABS.viewer : TABS.host;
+  const tabs = state.isHost() ? hostTabs : TABS.viewer;
 
   // Add ARIA attributes to indicate it is a tablist
   nav.setAttribute('role', 'tablist');

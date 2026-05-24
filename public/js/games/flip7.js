@@ -18,6 +18,16 @@ export default {
     { key: 'targetScore', label: 'Win Target', type: 'number', min: 10 },
   ],
 
+  // Compute score from a card selection object (used by dashboard inline scoring).
+  // Returns { basePoints, flip7 } compatible with applyRound / getRoundPoints.
+  computeScoreFromCards({ numbers = [], actions = [], x2 = false, bust = false } = {}) {
+    if (bust) return { basePoints: 0, flip7: false };
+    const numberSum = numbers.reduce((s, n) => s + n, 0);
+    const actionSum = actions.reduce((s, n) => s + n, 0);
+    const subtotal = (numberSum + actionSum) * (x2 ? 2 : 1);
+    return { basePoints: subtotal, flip7: numbers.length === 7 };
+  },
+
   validateRound(draft, gameState) {
     if (!draft.entries) return { valid: false, error: 'No scores entered' };
     for (const pid of Object.keys(draft.entries)) {

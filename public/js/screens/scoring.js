@@ -21,6 +21,12 @@ export function mount(container, params = {}) {
     return;
   }
 
+  // Flip 7 uses inline scoring on the dashboard
+  if (state.currentGame()?.type === 'flip7') {
+    router.navigate('dashboard', { roomCode });
+    return;
+  }
+
   if (!roomCode) {
     router.navigate('home');
     return;
