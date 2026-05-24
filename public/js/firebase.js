@@ -33,14 +33,13 @@ export function isConfigured() {
 // ── Room Code Generation ──
 
 function generateCode() {
-  // 4-letter word + 2 digits (e.g. GAME42). Easier to share verbally
-  // than a random 6-char alphanumeric. createRoom handles collisions by
-  // retrying — namespace is ~96k codes.
+  // 4-letter noun + 1 digit (e.g. DUCK3). Easy to say and spell verbally.
+  // createRoom handles collisions by retrying — namespace is 500 codes.
   const array = new Uint32Array(2);
   crypto.getRandomValues(array);
   const word = WORDS[array[0] % WORDS.length];
-  const digits = String(array[1] % 100).padStart(2, '0');
-  return word + digits;
+  const digit = String(array[1] % 10);
+  return word + digit;
 }
 
 function generateKey() {
