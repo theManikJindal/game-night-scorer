@@ -7,6 +7,7 @@ import * as fb from '../firebase.js';
 import * as router from '../router.js';
 import * as toast from '../components/toast.js';
 import * as bottomNav from '../components/bottom-nav.js';
+import * as qrModal from '../components/qr-modal.js';
 import { ACCENT_COLORS } from '../state.js';
 import { escapeHTML } from '../utils.js';
 
@@ -41,9 +42,14 @@ export function mount(container, params = {}) {
         <p class="font-mono text-[10px] uppercase tracking-widest text-outline mb-2">ROOM PIN</p>
         <div class="flex items-center justify-between">
           <span class="font-mono text-3xl font-bold tracking-[0.3em]">${roomCode}</span>
-          <button id="btn-copy" class="font-mono text-[10px] uppercase tracking-widest border border-outline px-3 py-2 hover:bg-surface-container-high transition-colors">
-            COPY LINK
-          </button>
+          <div class="flex items-center gap-2">
+            <button id="btn-qr" aria-label="Show QR code" title="Show QR code" class="font-mono text-[10px] uppercase tracking-widest border border-outline px-3 py-2 hover:bg-surface-container-high transition-colors flex items-center gap-1">
+              <span class="material-symbols-outlined" style="font-size:14px">qr_code_2</span>
+            </button>
+            <button id="btn-copy" class="font-mono text-[10px] uppercase tracking-widest border border-outline px-3 py-2 hover:bg-surface-container-high transition-colors">
+              COPY LINK
+            </button>
+          </div>
         </div>
       </div>
 
@@ -131,6 +137,12 @@ export function unmount() {
 }
 
 function _bindEvents(container, roomCode) {
+  // QR code
+  container.querySelector('#btn-qr').addEventListener('click', () => {
+    const url = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+    qrModal.show(url, roomCode);
+  });
+
   // Copy link
   container.querySelector('#btn-copy').addEventListener('click', () => {
     const url = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
