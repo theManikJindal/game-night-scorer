@@ -83,9 +83,40 @@ export function mount(container, params = {}) {
             let pool = rounds.filter((r) => r.jua?.firstSavePid).length * firstSaveAmt;
             pool += Object.values(game.juaFines || {}).reduce((s, n) => s + n, 0) * influenceFine;
 
-            const baseReward = (rank) => rank === 1 ? baseShare + 20 : rank === 2 ? baseShare : baseShare - 20;
-
             const fmt = (n) => `${n >= 0 ? '+' : ''}${n}`;
+
+            // Group standings by rank to detect ties
+            const byRank = {};
+            standings.forEach((s) => {
+              if (!byRank[s.rank]) byRank[s.rank] = [];
+              byRank[s.rank].push(s);
+            });
+            const n1 = (byRank[1] || []).length;
+            const n2 = (byRank[2] || []).length;
+            const n3 = (byRank[3] || []).length;
+
+            // Base position pots (before personal costs)
+            const pot1 = baseShare + 20 + pool;
+            const pot2 = baseShare;
+            const pot3 = baseShare - 20;
+
+            // Position reward per player accounting for ties
+            const positionReward = (rank) => {
+              if (rank === 1) {
+                if (n1 >= 3) return (pot1 + pot2 + pot3) / n1;
+                if (n1 === 2) return (pot1 + pot2) / 2;
+                return pot1;
+              }
+              if (rank === 2) {
+                if (n2 >= 2) return (pot2 + pot3) / n2;
+                return pot2;
+              }
+              if (rank === 3) {
+                if (n3 >= 2) return pot3 / n3;
+                return pot3;
+              }
+              return 0;
+            };
 
             return standings.map((s) => {
               const p = snapshot[s.playerId] || {};
@@ -93,24 +124,22 @@ export function mount(container, params = {}) {
               if (juaOn) {
                 const savesCost = (savesCounts[s.playerId] || 0) * firstSaveAmt;
                 const finesCost = ((game.juaFines || {})[s.playerId] || 0) * influenceFine;
-                let net;
+                const reward = positionReward(s.rank);
+                const net = reward - buyIn - savesCost - finesCost;
                 const terms = [];
-                if (s.rank === 1) {
-                  net = baseReward(1) + pool - buyIn - savesCost - finesCost;
-                  terms.push(fmt(baseReward(1)));
+                if (s.rank === 1 && n1 === 1) {
+                  // No tie at 1st — show base + pool separately
+                  terms.push(fmt(baseShare + 20));
                   if (pool > 0) terms.push(fmt(pool));
                 } else if (s.rank <= 3) {
-                  net = baseReward(s.rank) - buyIn - savesCost - finesCost;
-                  terms.push(fmt(baseReward(s.rank)));
-                } else {
-                  net = -buyIn - savesCost - finesCost;
+                  terms.push(fmt(Math.round(reward)));
                 }
                 if (savesCost > 0) terms.push(fmt(-savesCost));
                 terms.push(fmt(-buyIn));
                 if (finesCost > 0) terms.push(fmt(-finesCost));
                 const mathStr = terms.length > 1
-                  ? `${terms.join(' ')} = ${fmt(net)}`
-                  : fmt(net);
+                  ? `${terms.join(' ')} = ${fmt(Math.round(net))}`
+                  : fmt(Math.round(net));
                 netLabel = `<p class="font-mono text-sm opacity-70">${mathStr}</p>`;
               }
               return `

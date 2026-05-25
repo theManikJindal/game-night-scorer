@@ -303,11 +303,6 @@ function _render(container, roomCode) {
 
   let html = '';
 
-  // Overtime banner
-  if (game.status === 'overtime') {
-    html += `<div class="overtime-banner mb-4">TIE-BREAKER / OVERTIME</div>`;
-  }
-
   // Game info bar
   const isFlip7Host = game.type === 'flip7' && isHost
     && game.status !== 'finished' && game.status !== 'abandoned';
@@ -547,14 +542,12 @@ function _render(container, roomCode) {
         const juaData = hasFirstSaveChange ? { firstSavePid: pendingFirstSavePid || null } : undefined;
         try {
           await fb.patchLastRoundMulti(roomCode, game.gameId, _editLastRoundKey, pendingAdjustments, newTotals, juaData);
-          if (game.status === 'active' || game.status === 'overtime') {
+          if (game.status === 'active') {
             const endResult = gameModule.checkEnd(newTotals, game.config, playerIds, rounds.length);
-            if (endResult.ended && endResult.winner) {
+            if (endResult.ended) {
               await fb.submitGameEnd(roomCode, game.gameId, endResult.winner);
               router.navigate('winner', { roomCode });
               return;
-            } else if (endResult.ended && endResult.overtime) {
-              toast.show('Tied! Overtime round needed');
             }
           }
         } catch (e) {
@@ -1111,11 +1104,8 @@ async function _confirmFlip7Round(container, roomCode, initialGame, gameModule) 
     _juaRoundTracked = rounds.length + 1;
     fb.updateJuaLive(roomCode, game.gameId, null).catch(() => {});
 
-    if (endResult.ended && endResult.winner) {
+    if (endResult.ended) {
       router.navigate('winner', { roomCode });
-    } else if (endResult.ended && endResult.overtime) {
-      toast.show('Tied! Overtime round needed');
-      router.navigate('dashboard', { roomCode });
     } else {
       toast.show(`Round ${newRoundCount} submitted`);
       router.navigate('dashboard', { roomCode });
@@ -1337,18 +1327,8 @@ async function _undoRound(roomCode, game, gameModule) {
     newTotals = gameModule.applyRound(newTotals, rnd, game);
   });
 
-  // Re-evaluate end condition to determine correct status/overtime
-  const newRoundCount = allRoundsExceptLast.length;
-  const endResult = gameModule.checkEnd(newTotals, game.config, playerIds, newRoundCount);
-  let prevStatus = 'active';
-  let overtime = false;
-  if (endResult.ended && !endResult.winner) {
-    prevStatus = 'overtime';
-    overtime = true;
-  }
-
   try {
-    await fb.undoLastRound(roomCode, game.gameId, newTotals, prevStatus, overtime);
+    await fb.undoLastRound(roomCode, game.gameId, newTotals, 'active');
     toast.show('Round undone');
   } catch (e) {
     toast.show('Undo failed');

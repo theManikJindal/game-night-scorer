@@ -237,18 +237,15 @@ export async function submitRound(roomCode, gameId, roundIndex, roundData, newTo
   updates[`rooms/${roomCode}/meta/updatedAt`] = Date.now();
 
   if (endResult) {
-    updates[`rooms/${roomCode}/games/${gameId}/status`] = endResult.overtime ? 'overtime' : 'finished';
-    updates[`rooms/${roomCode}/games/${gameId}/overtime`] = endResult.overtime || false;
-    if (endResult.winner) {
-      updates[`rooms/${roomCode}/games/${gameId}/winner`] = endResult.winner;
-      updates[`rooms/${roomCode}/games/${gameId}/finishedAt`] = Date.now();
-    }
+    updates[`rooms/${roomCode}/games/${gameId}/status`] = 'finished';
+    updates[`rooms/${roomCode}/games/${gameId}/winner`] = endResult.winner;
+    updates[`rooms/${roomCode}/games/${gameId}/finishedAt`] = Date.now();
   }
 
   await db.ref().update(updates);
 }
 
-export async function undoLastRound(roomCode, gameId, newTotals, prevStatus, overtime = false) {
+export async function undoLastRound(roomCode, gameId, newTotals, prevStatus) {
   if (!db) return;
 
 
@@ -269,7 +266,6 @@ export async function undoLastRound(roomCode, gameId, newTotals, prevStatus, ove
   updates[`rooms/${roomCode}/games/${gameId}/rounds/${lastKey}`] = null;
   updates[`rooms/${roomCode}/games/${gameId}/totals`] = newTotals;
   updates[`rooms/${roomCode}/games/${gameId}/status`] = prevStatus;
-  updates[`rooms/${roomCode}/games/${gameId}/overtime`] = overtime;
   updates[`rooms/${roomCode}/games/${gameId}/winner`] = null;
   updates[`rooms/${roomCode}/games/${gameId}/finishedAt`] = null;
   updates[`rooms/${roomCode}/meta/updatedAt`] = Date.now();

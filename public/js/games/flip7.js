@@ -69,8 +69,8 @@ export default {
     if (leaders.length === 1) {
       return { ended: true, winner: leaders[0], overtime: false };
     }
-    // Tied — overtime
-    return { ended: true, winner: null, overtime: true };
+    // Tied — winner screen handles redistribution
+    return { ended: true, winner: leaders[0], overtime: false };
   },
 
   deriveStandings(totals, playerIds) {
@@ -250,8 +250,7 @@ export default {
         <h3 class="text-xl font-bold uppercase tracking-tight font-headline">Winning</h3>
       </div>
       <div class="pl-6 border-l border-outline-variant space-y-3">
-        <p class="text-sm text-on-surface-variant leading-relaxed">The game ends when any player's cumulative total reaches or exceeds the target score. The player with the <span class="font-bold">highest total</span> wins.</p>
-        <p class="text-sm text-on-surface-variant leading-relaxed">If first place is tied, the game enters <span class="font-bold uppercase">overtime</span> and continues until a unique winner exists.</p>
+        <p class="text-sm text-on-surface-variant leading-relaxed">The game ends when any player's cumulative total reaches or exceeds the target score. The player with the <span class="font-bold">highest total</span> wins. In case of a tie, the prize pool is split equally among the tied players.</p>
       </div>
     </section>
   `,

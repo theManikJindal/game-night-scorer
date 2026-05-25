@@ -85,20 +85,6 @@ function _render(container, roomCode) {
     return;
   }
 
-  // Safety: for round-limited games, block scoring if at the limit (unless overtime)
-  if (game.type === 'papayoo') {
-    const limit = parseInt(game.config?.roundLimit) || 5;
-    if (rounds.length >= limit && game.status === 'active') {
-      container.innerHTML = `
-        <div class="p-6 text-center py-20">
-          <span aria-hidden="true" class="material-symbols-outlined text-5xl text-outline mb-4">check_circle</span>
-          <p class="font-headline font-bold text-lg uppercase mb-2">All Rounds Complete</p>
-          <p class="font-body text-sm text-on-surface-variant">Determining winner...</p>
-        </div>
-      `;
-      return;
-    }
-  }
 
   // Derive standings for mini scoreboard
   const standings = gameModule.deriveStandings(totals, playerIds);
@@ -341,11 +327,8 @@ async function _submitRound(container, roomCode, initialGame, gameModule) {
     await fb.submitRound(roomCode, game.gameId, rounds.length, draft, newTotals, endResult.ended ? endResult : null);
     fb.unwatchConnection();
 
-    if (endResult.ended && endResult.winner) {
+    if (endResult.ended) {
       router.navigate('winner', { roomCode });
-    } else if (endResult.ended && endResult.overtime) {
-      toast.show('Tied! Overtime round needed');
-      router.navigate('dashboard', { roomCode });
     } else {
       // Always go to dashboard after submit — avoids stale state bugs
       toast.show(`Round ${newRoundCount} submitted`);

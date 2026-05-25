@@ -63,8 +63,8 @@ export default {
     if (leaders.length === 1) {
       return { ended: true, winner: leaders[0].id, overtime: false };
     }
-    // Tied at round limit — overtime
-    return { ended: true, winner: null, overtime: true };
+    // Tied — winner screen handles redistribution
+    return { ended: true, winner: leaders[0].id, overtime: false };
   },
 
   deriveStandings(totals, playerIds) {
