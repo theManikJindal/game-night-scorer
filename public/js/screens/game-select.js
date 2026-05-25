@@ -19,8 +19,11 @@ export function mount(container, params = {}) {
   const topBar = document.getElementById('top-bar');
   topBar.style.display = 'flex';
   document.getElementById('top-bar-title').textContent = 'SELECT GAME';
-  document.getElementById('top-bar-back').classList.remove('hidden');
-  document.getElementById('top-bar-back').onclick = () => router.navigate('lobby', { roomCode }, 'back');
+  const backBtn = document.getElementById('top-bar-back');
+  backBtn.classList.remove('hidden');
+  backBtn.textContent = 'arrow_back';
+  backBtn.setAttribute('aria-label', 'Go back');
+  backBtn.onclick = () => router.navigate('lobby', { roomCode }, 'back');
   document.getElementById('top-bar-actions').innerHTML = '';
 
   _selectedGame = null;
@@ -30,7 +33,7 @@ export function mount(container, params = {}) {
   const games = getAllGames();
 
   container.innerHTML = `
-    <div class="p-6 pb-32">
+    <div class="p-6 pb-24">
       <div class="flex justify-between items-end mb-6">
         <div>
           <p class="font-mono text-[10px] uppercase tracking-widest text-outline mb-1">CHOOSE YOUR GAME</p>
@@ -44,27 +47,26 @@ export function mount(container, params = {}) {
         ${games.map((g) => {
           const compatible = playerCount >= g.minPlayers && playerCount <= g.maxPlayers;
           return `
-            <button class="game-card w-full text-left bg-surface-container-lowest border border-outline p-6 transition-all ${compatible ? 'hover:bg-surface-container group' : 'opacity-40 cursor-not-allowed'}" data-id="${escapeHTML(g.id)}" ${!compatible ? 'disabled' : ''}>
-              <div class="flex justify-between items-start mb-3">
-                <span class="font-mono text-[10px] text-outline tracking-widest uppercase">${g.minPlayers}-${g.maxPlayers} PLAYERS / ${g.winMode === 'highest_total' ? 'HIGHEST WINS' : 'LOWEST WINS'}</span>
-                <div class="game-check w-7 h-7 border-2 border-outline-variant flex items-center justify-center transition-all"></div>
-              </div>
-              <h3 class="font-headline font-black text-3xl uppercase tracking-tighter mb-2 group-hover:text-secondary transition-colors">${g.label}</h3>
-              <p class="text-on-surface-variant text-sm leading-relaxed">${g.description}</p>
-            </button>
+            <div class="game-card-group" data-group-id="${escapeHTML(g.id)}">
+              <button class="game-card w-full text-left bg-surface-container-lowest border border-outline p-6 transition-all ${compatible ? 'hover:bg-surface-container group' : 'opacity-40 cursor-not-allowed'}" data-id="${escapeHTML(g.id)}" ${!compatible ? 'disabled' : ''}>
+                <div class="flex justify-between items-start mb-3">
+                  <span class="font-mono text-[10px] text-outline tracking-widest uppercase">${g.minPlayers}-${g.maxPlayers} PLAYERS / ${g.winMode === 'highest_total' ? 'HIGHEST WINS' : 'LOWEST WINS'}</span>
+                  <div class="game-check w-7 h-7 border-2 border-outline-variant flex items-center justify-center transition-all"></div>
+                </div>
+                <h3 class="font-headline font-black text-3xl uppercase tracking-tighter mb-2 group-hover:text-secondary transition-colors">${g.label}</h3>
+                <p class="text-on-surface-variant text-sm leading-relaxed">${g.description}</p>
+              </button>
+            </div>
           `;
         }).join('')}
       </div>
+    </div>
 
-      <!-- Config Section (shown after selection) -->
-      <div id="game-config" class="mt-6" style="display:none"></div>
-
-      <!-- Start Button -->
-      <div class="mt-8">
-        <button id="btn-start" class="btn-primary flex items-center justify-center gap-2" disabled>
-          SELECT A GAME
-        </button>
-      </div>
+    <!-- Start Button (floats up from bottom on selection) -->
+    <div id="btn-start-wrapper" class="fixed bottom-0 left-0 right-0 p-4 bg-surface border-t border-outline translate-y-full transition-transform duration-300 ease-out z-10">
+      <button id="btn-start" class="btn-primary flex items-center justify-center gap-2 w-full">
+        SELECT A GAME
+      </button>
     </div>
   `;
 
@@ -107,43 +109,105 @@ function _renderSelection(container) {
     }
   });
 
-  // Update start button to show selected game name
+  const startWrapper = container.querySelector('#btn-start-wrapper');
   const startBtn = container.querySelector('#btn-start');
   if (_selectedGame) {
     const game = getGame(_selectedGame);
+    startWrapper.classList.remove('translate-y-full');
+    startWrapper.classList.add('translate-y-0');
     startBtn.disabled = false;
     startBtn.innerHTML = `START ${game.label.toUpperCase()} <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>`;
   } else {
+    startWrapper.classList.remove('translate-y-0');
+    startWrapper.classList.add('translate-y-full');
     startBtn.disabled = true;
     startBtn.innerHTML = `SELECT A GAME`;
   }
 }
 
 function _renderConfig(container) {
-  const configEl = container.querySelector('#game-config');
-  if (!_selectedGame) {
-    configEl.style.display = 'none';
-    return;
-  }
+  // Remove any existing inline config panels
+  container.querySelectorAll('.game-config-inline').forEach((el) => el.remove());
+
+  if (!_selectedGame) return;
 
   const game = getGame(_selectedGame);
-  if (!game || !game.configFields || game.configFields.length === 0) {
-    configEl.style.display = 'none';
-    return;
-  }
+  if (!game || !game.configFields || game.configFields.length === 0) return;
 
   const playerCount = state.activePlayers().length;
+  const group = container.querySelector(`.game-card-group[data-group-id="${_selectedGame}"]`);
+  if (!group) return;
 
-  configEl.style.display = 'block';
-  configEl.innerHTML = `
-    <div class="bg-surface-container-lowest border border-outline p-4">
+  const configDiv = document.createElement('div');
+  configDiv.className = 'game-config-inline';
+  configDiv.innerHTML = `
+    <div class="bg-surface-container-lowest border border-outline border-t-0 p-4">
       <p class="font-mono text-[10px] uppercase tracking-widest text-outline mb-4">GAME SETTINGS</p>
       ${game.configFields.map((f) => _renderConfigField(game, f, playerCount)).join('')}
     </div>
   `;
+  group.appendChild(configDiv);
+
+  // Wire up toggle fields
+  game.configFields.filter((f) => f.type === 'toggle').forEach((f) => {
+    const btn = configDiv.querySelector(`#config-${f.key}`);
+    const subfields = configDiv.querySelector(`#config-${f.key}-subfields`);
+    if (!btn || !subfields) return;
+    btn.addEventListener('click', () => {
+      const isOn = btn.getAttribute('aria-checked') === 'true';
+      const next = !isOn;
+      btn.setAttribute('aria-checked', String(next));
+      const thumb = btn.querySelector('.toggle-thumb');
+      if (next) {
+        btn.classList.remove('bg-surface-container-high', 'border-outline');
+        btn.classList.add('bg-primary', 'border-primary');
+        if (thumb) { thumb.classList.remove('bg-outline'); thumb.classList.add('bg-on-primary', 'translate-x-5'); }
+        subfields.classList.remove('hidden');
+      } else {
+        btn.classList.remove('bg-primary', 'border-primary');
+        btn.classList.add('bg-surface-container-high', 'border-outline');
+        if (thumb) { thumb.classList.remove('bg-on-primary', 'translate-x-5'); thumb.classList.add('bg-outline'); }
+        subfields.classList.add('hidden');
+      }
+    });
+  });
 }
 
 function _renderConfigField(game, f, playerCount) {
+  if (f.type === 'toggle') {
+    const subFieldsHtml = (f.subFields || []).map((sf) => `
+      <div class="flex items-center justify-between py-2 border-b border-outline-variant last:border-0">
+        <label for="config-${sf.key}" class="font-headline font-bold text-xs uppercase">${escapeHTML(sf.label)}</label>
+        <div class="flex items-center gap-1">
+          ${sf.unit ? `<span class="font-mono text-lg text-outline">${escapeHTML(sf.unit)}</span>` : ''}
+          <input
+            type="number"
+            id="config-${sf.key}"
+            value="${game.defaultConfig[sf.key] !== undefined ? game.defaultConfig[sf.key] : (sf.default || 0)}"
+            min="${sf.min || 1}"
+            class="w-20 bg-transparent border-0 border-b-2 border-primary font-mono text-lg text-right py-1 px-0 focus:outline-none focus:border-secondary"
+          >
+        </div>
+      </div>
+    `).join('');
+    return `
+      <div class="py-3 border-b border-outline-variant last:border-0">
+        <div class="flex items-center justify-between">
+          <label class="font-headline font-bold text-sm uppercase">${escapeHTML(f.label)}</label>
+          <button
+            type="button"
+            role="switch"
+            id="config-${f.key}"
+            aria-checked="${String(!!game.defaultConfig[f.key])}"
+            class="w-12 h-7 border transition-colors relative focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${game.defaultConfig[f.key] ? 'bg-primary border-primary' : 'bg-surface-container-high border-outline'}"
+          ><span class="toggle-thumb absolute top-0.5 left-0.5 w-6 h-6 transition-all ${game.defaultConfig[f.key] ? 'bg-on-primary translate-x-5' : 'bg-outline'}"></span></button>
+        </div>
+        <div id="config-${f.key}-subfields" class="${game.defaultConfig[f.key] ? '' : 'hidden'} mt-3 pl-3 border-l-2 border-outline-variant">
+          ${subFieldsHtml}
+        </div>
+      </div>
+    `;
+  }
   if (f.type === 'select') {
     // Cabo: default to 2 decks once player count exceeds the single-deck cap
     // so the form starts in a valid state for larger rooms.
@@ -196,6 +260,39 @@ async function _startGame(container, roomCode) {
   const CONFIG_MAX = 9999;
   if (game.configFields) {
     for (const f of game.configFields) {
+      if (f.type === 'toggle') {
+        const toggleBtn = container.querySelector(`#config-${f.key}`);
+        if (!toggleBtn) continue;
+        const isOn = toggleBtn.getAttribute('aria-checked') === 'true';
+        config[f.key] = isOn;
+        if (isOn && f.subFields) {
+          for (const sf of f.subFields) {
+            const subInput = container.querySelector(`#config-${sf.key}`);
+            if (!subInput) continue;
+            const raw = subInput.value.trim();
+            if (raw === '') continue;
+            const parsed = Number(raw);
+            const min = sf.min || 1;
+            if (!Number.isFinite(parsed) || !Number.isInteger(parsed)) {
+              toast.show(`${sf.label} must be a whole number`);
+              subInput.focus();
+              return;
+            }
+            if (parsed < min) {
+              toast.show(`${sf.label} must be at least ${min}`);
+              subInput.focus();
+              return;
+            }
+            if (parsed > CONFIG_MAX) {
+              toast.show(`${sf.label} can't exceed ${CONFIG_MAX}`);
+              subInput.focus();
+              return;
+            }
+            config[sf.key] = parsed;
+          }
+        }
+        continue;
+      }
       const input = container.querySelector(`#config-${f.key}`);
       if (!input) continue;
       if (f.type === 'select') {
@@ -222,6 +319,14 @@ async function _startGame(container, roomCode) {
         return;
       }
       config[f.key] = parsed;
+    }
+  }
+
+  if (config.jua) {
+    if (config.juaBuyIn % 3 !== 0) {
+      toast.show(`Buy In must be divisible by 3`);
+      container.querySelector('#config-juaBuyIn')?.focus();
+      return;
     }
   }
 

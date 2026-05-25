@@ -21,6 +21,12 @@ export function mount(container, params = {}) {
     return;
   }
 
+  // Flip 7 uses inline scoring on the dashboard
+  if (state.currentGame()?.type === 'flip7') {
+    router.navigate('dashboard', { roomCode });
+    return;
+  }
+
   if (!roomCode) {
     router.navigate('home');
     return;
@@ -79,20 +85,6 @@ function _render(container, roomCode) {
     return;
   }
 
-  // Safety: for round-limited games, block scoring if at the limit (unless overtime)
-  if (game.type === 'papayoo') {
-    const limit = parseInt(game.config?.roundLimit) || 5;
-    if (rounds.length >= limit && game.status === 'active') {
-      container.innerHTML = `
-        <div class="p-6 text-center py-20">
-          <span aria-hidden="true" class="material-symbols-outlined text-5xl text-outline mb-4">check_circle</span>
-          <p class="font-headline font-bold text-lg uppercase mb-2">All Rounds Complete</p>
-          <p class="font-body text-sm text-on-surface-variant">Determining winner...</p>
-        </div>
-      `;
-      return;
-    }
-  }
 
   // Derive standings for mini scoreboard
   const standings = gameModule.deriveStandings(totals, playerIds);
@@ -194,7 +186,7 @@ function _bindFormInteractions(container, gameType, playerIds) {
         const isActive = btn.classList.contains('active');
         btn.setAttribute('aria-pressed', isActive.toString());
         const label = btn.querySelector('.flip7-label');
-        if (label) label.textContent = isActive ? 'F7\u2713' : 'F7';
+        if (label) label.textContent = isActive ? '\ud83d\udd25\u2713' : '\ud83d\udd25';
         if (isActive) {
           btn.style.background = '#000';
           btn.style.color = '#fff';
@@ -320,20 +312,30 @@ async function _submitRound(container, roomCode, initialGame, gameModule) {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner mx-auto"></div>';
 
-  try {
-    await fb.submitRound(roomCode, game.gameId, draft, newTotals, endResult.ended ? endResult : null);
+  // Firebase RTDB silently queues writes when offline — the await hangs until
+  // reconnected. Watch connection state so the user knows to wait, not retry.
+  fb.watchConnection((connected) => {
+    if (!btn.isConnected) return; // btn removed from DOM (navigated away)
+    if (!connected) {
+      btn.innerHTML = '<span class="font-mono text-[10px] uppercase tracking-widest">Waiting for connection…</span>';
+    } else {
+      btn.innerHTML = '<div class="spinner mx-auto"></div>';
+    }
+  });
 
-    if (endResult.ended && endResult.winner) {
+  try {
+    await fb.submitRound(roomCode, game.gameId, rounds.length, draft, newTotals, endResult.ended ? endResult : null);
+    fb.unwatchConnection();
+
+    if (endResult.ended) {
       router.navigate('winner', { roomCode });
-    } else if (endResult.ended && endResult.overtime) {
-      toast.show('Tied! Overtime round needed');
-      router.navigate('dashboard', { roomCode });
     } else {
       // Always go to dashboard after submit — avoids stale state bugs
       toast.show(`Round ${newRoundCount} submitted`);
       router.navigate('dashboard', { roomCode });
     }
   } catch (e) {
+    fb.unwatchConnection();
     console.error('Submit round failed:', e);
     toast.show('Submit failed');
     btn.disabled = false;

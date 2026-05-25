@@ -101,7 +101,7 @@ body {
 .accent-9  { --accent: #84CC16; }
 
 .accent-bar {
-  height: 3px;
+  height: 6px;
   width: 100%;
   background: var(--accent);
 }

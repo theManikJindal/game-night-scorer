@@ -136,6 +136,7 @@ export function computeNightStats(games, players) {
     mvpId,
     overall: overallList,
     perGame,
+    winnings: _computeNightWinnings(allGames),
   };
 
   if (games && typeof games === 'object') {
@@ -150,6 +151,8 @@ function _computeGameSpecificStats(game, gameModule, rounds, playerIds, snapshot
 
 // Bolt Optimization: Replace O(N) array find with O(1) Map lookup
   const standingsMap = new Map(standings.map(s => [s.playerId, s]));
+
+  const juaNets = (game.type === 'flip7' && game.config?.jua) ? _computeJuaNets(game) : null;
 
   // Precompute minCard for cabo rounds to avoid O(P*R) redundant calculations
   const caboMinCards = new Map();
@@ -192,6 +195,7 @@ function _computeGameSpecificStats(game, gameModule, rounds, playerIds, snapshot
         bestRound: roundScores.length ? Math.max(...roundScores) : 0,
         worstRound: roundScores.length ? Math.min(...roundScores) : 0,
         f7Bonuses,
+        juaNet: juaNets ? (juaNets.has(pid) ? juaNets.get(pid) : null) : null,
       };
     } else if (game.type === 'papayoo') {
       let zeroRounds = 0;
@@ -269,4 +273,112 @@ function _computeGameSpecificStats(game, gameModule, rounds, playerIds, snapshot
   });
 
   return stats;
+}
+
+// Compute per-player Jua net for a single finished Flip 7 game with Jua enabled.
+// Returns a Map<playerId, net> or null if the game isn't a qualifying Jua game.
+function _computeJuaNets(game) {
+  const cfg = game.config || {};
+  if (!cfg.jua || game.status !== 'finished') return null;
+
+  const buyIn = cfg.juaBuyIn || 30;
+  const firstSaveAmt = cfg.juaFirstSave || 5;
+  const influenceFine = cfg.juaInfluenceFine || 10;
+  const numPlayers = (game.playerIds || []).length;
+  const baseShare = (buyIn * numPlayers) / 3;
+
+  const rounds = Object.values(game.rounds || {});
+  const savesCounts = {};
+  rounds.forEach((rnd) => {
+    const pid = rnd.jua?.firstSavePid;
+    if (pid) savesCounts[pid] = (savesCounts[pid] || 0) + 1;
+  });
+
+  let pool = rounds.filter((r) => r.jua?.firstSavePid).length * firstSaveAmt;
+  pool += Object.values(game.juaFines || {}).reduce((s, n) => s + n, 0) * influenceFine;
+
+  const totals = game.totals || {};
+  const sorted = (game.playerIds || [])
+    .map((id) => ({ playerId: id, total: totals[id] || 0 }))
+    .sort((a, b) => b.total - a.total);
+  let rank = 1;
+  sorted.forEach((s, i) => {
+    if (i > 0 && s.total < sorted[i - 1].total) rank = i + 1;
+    s.rank = rank;
+  });
+
+  const byRank = {};
+  sorted.forEach((s) => {
+    if (!byRank[s.rank]) byRank[s.rank] = [];
+    byRank[s.rank].push(s);
+  });
+  const n1 = (byRank[1] || []).length;
+  const n2 = (byRank[2] || []).length;
+  const n3 = (byRank[3] || []).length;
+
+  const pot1 = baseShare + 20 + pool;
+  const pot2 = baseShare;
+  const pot3 = baseShare - 20;
+
+  const positionReward = (r) => {
+    if (r === 1) {
+      if (n1 >= 3) return (pot1 + pot2 + pot3) / n1;
+      if (n1 === 2) return (pot1 + pot2) / 2;
+      return pot1;
+    }
+    if (r === 2) {
+      if (n2 >= 2) return (pot2 + pot3) / n2;
+      return pot2;
+    }
+    if (r === 3) {
+      if (n3 >= 2) return pot3 / n3;
+      return pot3;
+    }
+    return 0;
+  };
+
+  const nets = new Map();
+  sorted.forEach((s) => {
+    const savesCount = savesCounts[s.playerId] || 0;
+    const finesCount = (game.juaFines || {})[s.playerId] || 0;
+    const reward = positionReward(s.rank);
+    nets.set(s.playerId, reward - buyIn - savesCount * firstSaveAmt - finesCount * influenceFine);
+  });
+
+  return nets;
+}
+
+// Aggregate Jua nets across all finished Jua games in a night.
+// Returns { players: [{playerId, name, accentIndex, net, gamesCount, gameNets}] } sorted by net desc, or null.
+function _computeNightWinnings(allGames) {
+  const playerNets = {};
+
+  allGames.forEach((game, gi) => {
+    if (game.type !== 'flip7') return;
+    const nets = _computeJuaNets(game);
+    if (!nets) return;
+
+    const gameNum = gi + 1;
+    const snapshot = game.playerSnapshot || {};
+    nets.forEach((net, pid) => {
+      if (!playerNets[pid]) {
+        playerNets[pid] = {
+          playerId: pid,
+          name: snapshot[pid]?.name || pid,
+          accentIndex: snapshot[pid]?.accentIndex || 0,
+          net: 0,
+          gamesCount: 0,
+          gameNets: [],
+        };
+      }
+      playerNets[pid].net += net;
+      playerNets[pid].gamesCount++;
+      playerNets[pid].gameNets.push({ gameNum, net });
+    });
+  });
+
+  const players = Object.values(playerNets);
+  if (players.length === 0) return null;
+  players.sort((a, b) => b.net - a.net);
+  return { players };
 }

@@ -16,15 +16,13 @@ export function mount(container) {
     <div class="flex flex-col items-center justify-center h-full px-6">
       <!-- Logo -->
       <div class="text-center mb-16">
-        <p class="font-mono text-[10px] uppercase tracking-[0.2em] text-outline mb-3">System.Ref_01</p>
-        <h1 class="font-headline font-black uppercase tracking-tighter text-4xl leading-none">GAME<br>NIGHT</h1>
-        <p class="font-mono text-[10px] uppercase tracking-[0.15em] text-outline mt-3">SCORER</p>
+        <h1 class="font-headline font-black uppercase tracking-tighter text-4xl leading-none">GAME<br>NIGHT<br>SCORER</h1>
       </div>
 
       <!-- Create -->
       <div class="w-full max-w-xs space-y-3 mb-12">
         <button id="btn-create" class="btn-primary flex items-center justify-center gap-2">
-          CREATE SESSION
+          CREATE LOBBY
           <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>
         </button>
       </div>
@@ -38,13 +36,13 @@ export function mount(container) {
 
       <!-- Join -->
       <div class="w-full max-w-xs space-y-3">
-        <label for="input-pin" class="sr-only">ROOM PIN</label>
+        <label for="input-pin" class="sr-only">LOBBY PIN</label>
         <input
           id="input-pin"
           aria-label="Room PIN"
           type="text"
           maxlength="6"
-          placeholder="ROOM PIN"
+          placeholder="LOBBY PIN"
           autocomplete="off"
           autocorrect="off"
           autocapitalize="characters"
@@ -52,7 +50,7 @@ export function mount(container) {
           class="w-full bg-transparent border border-primary text-center font-mono text-2xl font-bold tracking-[0.4em] py-4 px-4 placeholder:text-outline placeholder:tracking-normal placeholder:text-base placeholder:font-body focus:outline-none focus:border-secondary transition-colors uppercase"
         >
         <button id="btn-join" class="btn-secondary flex items-center justify-center gap-2">
-          JOIN ROOM
+          JOIN LOBBY
         </button>
       </div>
 
@@ -90,7 +88,7 @@ export function mount(container) {
       console.error('Create room failed:', e);
       toast.show('Failed to create room');
       btn.disabled = false;
-      btn.innerHTML = 'CREATE SESSION <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>';
+      btn.innerHTML = 'CREATE LOBBY <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>';
     }
   });
 
@@ -118,7 +116,7 @@ export function mount(container) {
         toast.show('Room not found');
         _shakeInput(container.querySelector('#input-pin'));
         btn.disabled = false;
-        btn.innerHTML = 'JOIN ROOM';
+        btn.innerHTML = 'JOIN LOBBY';
         return;
       }
 
@@ -131,7 +129,7 @@ export function mount(container) {
       console.error('Join failed:', e);
       toast.show('Failed to join room');
       btn.disabled = false;
-      btn.innerHTML = 'JOIN ROOM';
+      btn.innerHTML = 'JOIN LOBBY';
     }
   };
 

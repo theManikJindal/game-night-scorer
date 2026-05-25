@@ -93,6 +93,11 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// In local dev the CI substitution never runs, so VERSION stays '__VERSION__'.
+// Use network-first for same-origin assets in that case so file changes are
+// visible immediately without a hard reload.
+const IS_DEV = VERSION === '__VERSION__';
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
@@ -107,7 +112,9 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.origin === self.location.origin) {
-    event.respondWith(cacheFirst(event.request, APP_SHELL_CACHE));
+    event.respondWith(
+      IS_DEV ? networkFirst(event.request) : cacheFirst(event.request, APP_SHELL_CACHE)
+    );
     return;
   }
 

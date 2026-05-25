@@ -13,10 +13,30 @@ export default {
   minPlayers: 2,
   maxPlayers: 20,
   winMode: 'highest_total',
-  defaultConfig: { targetScore: 200 },
+  defaultConfig: { targetScore: 200, jua: true, juaBuyIn: 30, juaFirstSave: 5, juaInfluenceFine: 10 },
   configFields: [
     { key: 'targetScore', label: 'Win Target', type: 'number', min: 10 },
+    {
+      key: 'jua',
+      label: 'Make it interesting',
+      type: 'toggle',
+      subFields: [
+        { key: 'juaBuyIn', label: 'Buy In', type: 'number', min: 1, unit: '₹' },
+        { key: 'juaFirstSave', label: 'First Save', type: 'number', min: 1, unit: '₹' },
+        { key: 'juaInfluenceFine', label: 'Fine', type: 'number', min: 1, unit: '₹' },
+      ],
+    },
   ],
+
+  // Compute score from a card selection object (used by dashboard inline scoring).
+  // Returns { basePoints, flip7 } compatible with applyRound / getRoundPoints.
+  computeScoreFromCards({ numbers = [], actions = [], x2 = false, bust = false } = {}) {
+    if (bust) return { basePoints: 0, flip7: false };
+    const numberSum = numbers.reduce((s, n) => s + n, 0);
+    const actionSum = actions.reduce((s, n) => s + n, 0);
+    const subtotal = (numberSum + actionSum) * (x2 ? 2 : 1);
+    return { basePoints: subtotal, flip7: numbers.length === 7 };
+  },
 
   validateRound(draft, gameState) {
     if (!draft.entries) return { valid: false, error: 'No scores entered' };
@@ -49,8 +69,8 @@ export default {
     if (leaders.length === 1) {
       return { ended: true, winner: leaders[0], overtime: false };
     }
-    // Tied — overtime
-    return { ended: true, winner: null, overtime: true };
+    // Tied — winner screen handles redistribution
+    return { ended: true, winner: leaders[0], overtime: false };
   },
 
   deriveStandings(totals, playerIds) {
@@ -63,6 +83,33 @@ export default {
       s.rank = rank;
     });
     return sorted;
+  },
+
+  computeJuaPayouts(game) {
+    const config = game.config || {};
+    if (!config.jua) return null;
+    const numPlayers = (game.playerIds || []).length;
+    const buyIn = config.juaBuyIn || 30;
+    const firstSaveAmt = config.juaFirstSave || 5;
+    const influenceFine = config.juaInfluenceFine || 10;
+    const baseShare = (buyIn * numPlayers) / 3;
+
+    let pool = 0;
+    const rounds = game.rounds ? Object.values(game.rounds) : [];
+    rounds.forEach((rnd) => { if (rnd.jua?.firstSavePid) pool += firstSaveAmt; });
+    const totalFines = Object.values(game.juaFines || {}).reduce((s, n) => s + n, 0);
+    pool += totalFines * influenceFine;
+
+    const standings = this.deriveStandings(game.totals || {}, game.playerIds || []);
+    const payouts = standings
+      .filter((s) => s.rank <= 3)
+      .map((s) => ({
+        playerId: s.playerId,
+        rank: s.rank,
+        amount: baseShare + (s.rank === 1 ? 20 + pool : s.rank === 2 ? 0 : -20),
+      }));
+
+    return { baseShare, pool, payouts };
   },
 
   getRoundPoints(roundData, playerId) {
@@ -107,7 +154,7 @@ export default {
                     aria-pressed="false"
                     aria-label="Flip 7 for ${escapeHTML(p.name || pid)}"
                     class="flip7-toggle min-w-[44px] min-h-[44px] px-2 border font-mono text-[10px] uppercase tracking-widest transition-colors border-outline-variant text-outline hover:border-primary inline-flex items-center justify-center gap-1"
-                  ><span class="flip7-label">F7</span></button>
+                  ><span class="flip7-label">🔥</span></button>
                   <button
                     type="button"
                     data-player="${escapeHTML(pid)}"
@@ -154,7 +201,7 @@ export default {
       toggle.style.color = '';
       toggle.style.borderColor = '';
       const label = toggle.querySelector('.flip7-label');
-      if (label) label.textContent = 'F7';
+      if (label) label.textContent = '🔥';
     }
   },
 
@@ -203,8 +250,7 @@ export default {
         <h3 class="text-xl font-bold uppercase tracking-tight font-headline">Winning</h3>
       </div>
       <div class="pl-6 border-l border-outline-variant space-y-3">
-        <p class="text-sm text-on-surface-variant leading-relaxed">The game ends when any player's cumulative total reaches or exceeds the target score. The player with the <span class="font-bold">highest total</span> wins.</p>
-        <p class="text-sm text-on-surface-variant leading-relaxed">If first place is tied, the game enters <span class="font-bold uppercase">overtime</span> and continues until a unique winner exists.</p>
+        <p class="text-sm text-on-surface-variant leading-relaxed">The game ends when any player's cumulative total reaches or exceeds the target score. The player with the <span class="font-bold">highest total</span> wins. In case of a tie, the prize pool is split equally among the tied players.</p>
       </div>
     </section>
   `,
