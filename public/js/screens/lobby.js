@@ -109,7 +109,7 @@ export function mount(container, params = {}) {
           CHOOSE GAME
           <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>
         </button>
-        <p id="start-hint" class="font-mono text-[10px] text-outline text-center mt-2 uppercase">ADD AT LEAST 2 PLAYERS</p>
+        <p id="start-hint" class="font-mono text-[10px] text-outline text-center mt-2 uppercase">ADD AT LEAST 3 PLAYERS</p>
       </div>
 
       <!-- Call it a Night (host only, visible after at least 1 finished game, between games) -->
@@ -421,8 +421,8 @@ function _startWatching(roomCode, container) {
     const hint = container.querySelector('#start-hint');
     if (startSection) startSection.style.display = (isHost && !isPlaying) ? 'block' : 'none';
     if (btn) {
-      btn.disabled = activeCount < 2;
-      hint.textContent = activeCount < 2 ? 'ADD AT LEAST 2 PLAYERS' : `${activeCount} PLAYERS READY`;
+      btn.disabled = activeCount < 3;
+      hint.textContent = activeCount < 3 ? 'ADD AT LEAST 3 PLAYERS' : `${activeCount} PLAYERS READY`;
     }
   });
 }

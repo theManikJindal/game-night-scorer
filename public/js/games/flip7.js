@@ -10,7 +10,7 @@ export default {
   label: 'Flip 7',
   description: 'Flip cards and push your luck. Highest score wins when someone hits the target.',
   scoringHint: 'Enter each player\u2019s round score. If a player flipped seven different cards (Flip 7), tap the F7 toggle for a +15 bonus. First to the target total wins.',
-  minPlayers: 2,
+  minPlayers: 3,
   maxPlayers: 20,
   winMode: 'highest_total',
   defaultConfig: { targetScore: 200, jua: true, juaBuyIn: 30, juaFirstSave: 5, juaInfluenceFine: 10 },
