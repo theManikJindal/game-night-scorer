@@ -171,25 +171,65 @@ function _renderConfig(container) {
       }
     });
   });
+
+  // Live-compute prize displays; buy-in changes also reset prize1/prize2 to their defaults
+  const prize1El = configDiv.querySelector('#config-juaPrize1');
+  const prize2El = configDiv.querySelector('#config-juaPrize2');
+  const prize3El = configDiv.querySelector('#config-juaPrize3-display');
+  const buyInEl = configDiv.querySelector('#config-juaBuyIn');
+
+  const _updatePrize3 = () => {
+    if (!prize3El) return;
+    const buyIn = parseInt(buyInEl?.value) || 0;
+    const prize1 = parseInt(prize1El?.value) || 0;
+    const prize2 = parseInt(prize2El?.value) || 0;
+    const prize3 = buyIn * playerCount - prize1 - prize2;
+    prize3El.textContent = prize3;
+    prize3El.style.color = prize3 < 0 ? '#dc2626' : '';
+  };
+
+  buyInEl?.addEventListener('input', () => {
+    const buyIn = parseInt(buyInEl.value) || 0;
+    const def = Math.ceil(buyIn * playerCount * 0.33);
+    if (prize1El) prize1El.value = def;
+    if (prize2El) prize2El.value = def;
+    _updatePrize3();
+  });
+
+  [prize1El, prize2El].filter(Boolean).forEach((el) => el.addEventListener('input', _updatePrize3));
+  _updatePrize3();
 }
 
 function _renderConfigField(game, f, playerCount) {
   if (f.type === 'toggle') {
-    const subFieldsHtml = (f.subFields || []).map((sf) => `
-      <div class="flex items-center justify-between py-2 border-b border-outline-variant last:border-0">
-        <label for="config-${sf.key}" class="font-headline font-bold text-xs uppercase">${escapeHTML(sf.label)}</label>
-        <div class="flex items-center gap-1">
-          ${sf.unit ? `<span class="font-mono text-lg text-outline">${escapeHTML(sf.unit)}</span>` : ''}
-          <input
-            type="number"
-            id="config-${sf.key}"
-            value="${game.defaultConfig[sf.key] !== undefined ? game.defaultConfig[sf.key] : (sf.default || 0)}"
-            min="${sf.min || 1}"
-            class="w-20 bg-transparent border-0 border-b-2 border-primary font-mono text-lg text-right py-1 px-0 focus:outline-none focus:border-secondary"
-          >
+    const subFieldsHtml = (f.subFields || []).map((sf) => {
+      if (sf.type === 'computed') {
+        return `
+          <div class="flex items-center justify-between py-2 border-b border-outline-variant last:border-0">
+            <label class="font-headline font-bold text-xs uppercase text-outline">${escapeHTML(sf.label)}</label>
+            <div class="flex items-center gap-1">
+              ${sf.unit ? `<span class="font-mono text-lg text-outline">${escapeHTML(sf.unit)}</span>` : ''}
+              <span id="config-${sf.key}-display" class="font-mono text-lg w-20 text-right text-outline">—</span>
+            </div>
+          </div>
+        `;
+      }
+      return `
+        <div class="flex items-center justify-between py-2 border-b border-outline-variant last:border-0">
+          <label for="config-${sf.key}" class="font-headline font-bold text-xs uppercase">${escapeHTML(sf.label)}</label>
+          <div class="flex items-center gap-1">
+            ${sf.unit ? `<span class="font-mono text-lg text-outline">${escapeHTML(sf.unit)}</span>` : ''}
+            <input
+              type="number"
+              id="config-${sf.key}"
+              value="${sf.computeDefault ? sf.computeDefault(game.defaultConfig, playerCount) : (game.defaultConfig[sf.key] !== undefined ? game.defaultConfig[sf.key] : (sf.default || 0))}"
+              min="${sf.min !== undefined ? sf.min : 1}"
+              class="w-20 bg-transparent border-0 border-b-2 border-primary font-mono text-lg text-right py-1 px-0 focus:outline-none focus:border-secondary"
+            >
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
     return `
       <div class="py-3 border-b border-outline-variant last:border-0">
         <div class="flex items-center justify-between">
@@ -323,9 +363,10 @@ async function _startGame(container, roomCode) {
   }
 
   if (config.jua) {
-    if (config.juaBuyIn % 3 !== 0) {
-      toast.show(`Buy In must be divisible by 3`);
-      container.querySelector('#config-juaBuyIn')?.focus();
+    const totalPot = config.juaBuyIn * playerIds.length;
+    if (config.juaPrize1 + config.juaPrize2 > totalPot) {
+      toast.show(`1st and 2nd place prizes exceed the total pot (₹${totalPot})`);
+      container.querySelector('#config-juaPrize1')?.focus();
       return;
     }
   }

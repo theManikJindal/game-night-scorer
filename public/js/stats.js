@@ -285,7 +285,10 @@ function _computeJuaNets(game) {
   const firstSaveAmt = cfg.juaFirstSave || 5;
   const influenceFine = cfg.juaInfluenceFine || 10;
   const numPlayers = (game.playerIds || []).length;
-  const baseShare = (buyIn * numPlayers) / 3;
+  const totalPot = buyIn * numPlayers;
+  const prize1 = cfg.juaPrize1 || 0;
+  const prize2 = cfg.juaPrize2 || 0;
+  const prize3 = totalPot - prize1 - prize2;
 
   const rounds = Object.values(game.rounds || {});
   const savesCounts = {};
@@ -316,9 +319,9 @@ function _computeJuaNets(game) {
   const n2 = (byRank[2] || []).length;
   const n3 = (byRank[3] || []).length;
 
-  const pot1 = baseShare + 20 + pool;
-  const pot2 = baseShare;
-  const pot3 = baseShare - 20;
+  const pot1 = prize1 + pool;
+  const pot2 = prize2;
+  const pot3 = prize3;
 
   const positionReward = (r) => {
     if (r === 1) {

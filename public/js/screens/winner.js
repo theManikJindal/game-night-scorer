@@ -72,7 +72,10 @@ export function mount(container, params = {}) {
             const firstSaveAmt = cfg.juaFirstSave || 5;
             const influenceFine = cfg.juaInfluenceFine || 10;
             const numPlayers = (game.playerIds || []).length;
-            const baseShare = (buyIn * numPlayers) / 3;
+            const totalPot = buyIn * numPlayers;
+            const prize1 = cfg.juaPrize1 || 0;
+            const prize2 = cfg.juaPrize2 || 0;
+            const prize3 = totalPot - prize1 - prize2;
 
             const rounds = Object.values(game.rounds || {});
             const savesCounts = {};
@@ -98,9 +101,9 @@ export function mount(container, params = {}) {
             const n3 = (byRank[3] || []).length;
 
             // Base position pots (before personal costs)
-            const pot1 = baseShare + 20 + pool;
-            const pot2 = baseShare;
-            const pot3 = baseShare - 20;
+            const pot1 = prize1 + pool;
+            const pot2 = prize2;
+            const pot3 = prize3;
 
             // Position reward per player accounting for ties
             const positionReward = (rank) => {
@@ -142,7 +145,7 @@ export function mount(container, params = {}) {
                 const net = reward - buyIn - savesCost - finesCost;
                 const terms = [];
                 if (s.rank === 1 && n1 === 1) {
-                  terms.push(fmt(baseShare + 20));
+                  terms.push(fmt(prize1));
                   if (pool > 0) terms.push(fmt(pool));
                 } else if (s.rank <= 3) {
                   terms.push(fmt(d1(reward)));
@@ -192,18 +195,18 @@ export function mount(container, params = {}) {
               const r = (v) => parseFloat(v.toFixed(1));
               const posRow = (rank, count) => {
                 const label = ['1st', '2nd', '3rd'][rank - 1];
-                const base20 = r(baseShare + 20);
+                const base1 = r(prize1);
                 const poolPart = pool > 0 ? `+${r(pool)} ` : '';
                 let math, each;
                 if (rank === 1) {
                   if (count >= 3) {
-                    math = `${poolPart}+${base20} + ${r(pot2)} + ${r(pot3)}`;
+                    math = `${poolPart}+${base1} + ${r(pot2)} + ${r(pot3)}`;
                     each = count > 0 ? r((pot1 + pot2 + pot3) / count) : null;
                   } else if (count === 2) {
-                    math = `${poolPart}+${base20} + ${r(pot2)}`;
+                    math = `${poolPart}+${base1} + ${r(pot2)}`;
                     each = r((pot1 + pot2) / 2);
                   } else {
-                    math = `${poolPart}+${base20}`;
+                    math = `${poolPart}+${base1}`;
                     each = count > 0 ? r(pot1) : null;
                   }
                 } else if (rank === 2) {

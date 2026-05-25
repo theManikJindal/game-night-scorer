@@ -10,7 +10,7 @@ export default {
   label: 'Flip 7',
   description: 'Flip cards and push your luck. Highest score wins when someone hits the target.',
   scoringHint: 'Enter each player\u2019s round score. If a player flipped seven different cards (Flip 7), tap the F7 toggle for a +15 bonus. First to the target total wins.',
-  minPlayers: 2,
+  minPlayers: 3,
   maxPlayers: 20,
   winMode: 'highest_total',
   defaultConfig: { targetScore: 200, jua: true, juaBuyIn: 30, juaFirstSave: 5, juaInfluenceFine: 10 },
@@ -22,6 +22,9 @@ export default {
       type: 'toggle',
       subFields: [
         { key: 'juaBuyIn', label: 'Buy In', type: 'number', min: 1, unit: '₹' },
+        { key: 'juaPrize1', label: '1st Place', type: 'number', min: 0, unit: '₹', computeDefault: (cfg, n) => Math.ceil(cfg.juaBuyIn * n * 0.33) },
+        { key: 'juaPrize2', label: '2nd Place', type: 'number', min: 0, unit: '₹', computeDefault: (cfg, n) => Math.ceil(cfg.juaBuyIn * n * 0.33) },
+        { key: 'juaPrize3', label: '3rd Place', type: 'computed', unit: '₹' },
         { key: 'juaFirstSave', label: 'First Save', type: 'number', min: 1, unit: '₹' },
         { key: 'juaInfluenceFine', label: 'Fine', type: 'number', min: 1, unit: '₹' },
       ],
@@ -92,7 +95,10 @@ export default {
     const buyIn = config.juaBuyIn || 30;
     const firstSaveAmt = config.juaFirstSave || 5;
     const influenceFine = config.juaInfluenceFine || 10;
-    const baseShare = (buyIn * numPlayers) / 3;
+    const totalPot = buyIn * numPlayers;
+    const prize1 = config.juaPrize1 || 0;
+    const prize2 = config.juaPrize2 || 0;
+    const prize3 = totalPot - prize1 - prize2;
 
     let pool = 0;
     const rounds = game.rounds ? Object.values(game.rounds) : [];
@@ -100,16 +106,20 @@ export default {
     const totalFines = Object.values(game.juaFines || {}).reduce((s, n) => s + n, 0);
     pool += totalFines * influenceFine;
 
+    const pot1 = prize1 + pool;
+    const pot2 = prize2;
+    const pot3 = prize3;
+
     const standings = this.deriveStandings(game.totals || {}, game.playerIds || []);
     const payouts = standings
       .filter((s) => s.rank <= 3)
       .map((s) => ({
         playerId: s.playerId,
         rank: s.rank,
-        amount: baseShare + (s.rank === 1 ? 20 + pool : s.rank === 2 ? 0 : -20),
+        amount: s.rank === 1 ? pot1 : s.rank === 2 ? pot2 : pot3,
       }));
 
-    return { baseShare, pool, payouts };
+    return { pool, payouts };
   },
 
   getRoundPoints(roundData, playerId) {

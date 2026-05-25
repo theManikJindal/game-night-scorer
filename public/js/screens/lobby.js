@@ -109,7 +109,7 @@ export function mount(container, params = {}) {
           CHOOSE GAME
           <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>
         </button>
-        <p id="start-hint" class="font-mono text-[10px] text-outline text-center mt-2 uppercase">ADD AT LEAST 2 PLAYERS</p>
+        <p id="start-hint" class="font-mono text-[10px] text-outline text-center mt-2 uppercase">ADD AT LEAST 3 PLAYERS</p>
       </div>
 
       <!-- Call it a Night (host only, visible after at least 1 finished game, between games) -->
@@ -119,6 +119,20 @@ export function mount(container, params = {}) {
           CALL IT A NIGHT
         </button>
         <p class="font-mono text-[10px] text-outline text-center mt-2 uppercase">LOCKS THE NIGHT AND SHOWS THE RECAP TO EVERYONE</p>
+      </div>
+
+      <!-- Change Host (host only) -->
+      <div id="change-host-section" class="mt-6" style="display:none">
+        <button id="btn-change-host" class="w-full border border-red-600 text-red-600 py-3 font-headline font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-600 hover:text-white transition-colors">
+          CHANGE HOST
+        </button>
+      </div>
+
+      <!-- Become Host (visible to all when no host) -->
+      <div id="become-host-section" class="mt-4" style="display:none">
+        <button id="btn-become-host" class="w-full bg-surface-container-lowest border border-outline py-3 font-headline font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors">
+          BECOME HOST
+        </button>
       </div>
     </div>
   `;
@@ -194,6 +208,22 @@ function _bindEvents(container, roomCode) {
     } catch (e) {
       console.error('End night failed:', e);
       toast.show('Failed to end night');
+    }
+  });
+
+  container.querySelector('#btn-change-host')?.addEventListener('click', async () => {
+    try {
+      await fb.releaseHost(roomCode);
+    } catch (e) {
+      toast.show('Failed to release host');
+    }
+  });
+
+  container.querySelector('#btn-become-host')?.addEventListener('click', async () => {
+    try {
+      await fb.claimHost(roomCode);
+    } catch (e) {
+      toast.show('Failed to claim host');
     }
   });
 
@@ -375,6 +405,12 @@ function _startWatching(roomCode, container) {
       callNightSection.style.display = show ? 'block' : 'none';
     }
 
+    const changeHostSection = container.querySelector('#change-host-section');
+    if (changeHostSection) changeHostSection.style.display = isHost ? 'block' : 'none';
+
+    const becomeHostSection = container.querySelector('#become-host-section');
+    if (becomeHostSection) becomeHostSection.style.display = (!meta.hostKey && !isHost) ? 'block' : 'none';
+
     // Enable/disable start
     const activeCount = Object.values(players).filter((p) => p.isActive).length;
     const activeGame = state.currentGame();
@@ -421,8 +457,8 @@ function _startWatching(roomCode, container) {
     const hint = container.querySelector('#start-hint');
     if (startSection) startSection.style.display = (isHost && !isPlaying) ? 'block' : 'none';
     if (btn) {
-      btn.disabled = activeCount < 2;
-      hint.textContent = activeCount < 2 ? 'ADD AT LEAST 2 PLAYERS' : `${activeCount} PLAYERS READY`;
+      btn.disabled = activeCount < 3;
+      hint.textContent = activeCount < 3 ? 'ADD AT LEAST 3 PLAYERS' : `${activeCount} PLAYERS READY`;
     }
   });
 }
