@@ -63,7 +63,7 @@ export function mount(container, params = {}) {
         </div>
 
         <!-- Standings -->
-        <div class="w-full max-w-sm mx-auto divide-y divide-white/20">
+        <div class="w-full max-w-sm mx-auto">
           ${(() => {
             const cfg = game.config || {};
             const juaOn = !!cfg.jua;
@@ -121,10 +121,19 @@ export function mount(container, params = {}) {
 
             const rowsHtml = standings.map((s) => {
               const p = snapshot[s.playerId] || {};
+              const savesCount = savesCounts[s.playerId] || 0;
+              const finesCount = (game.juaFines || {})[s.playerId] || 0;
+
+              // Save/Fine label shown in scores view
+              const sfParts = [];
+              if (savesCount > 0) sfParts.push(`Save: ${savesCount}`);
+              if (finesCount > 0) sfParts.push(`Fine: ${finesCount}`);
+              const sfLine = juaOn && sfParts.length > 0
+                ? `<p class="font-mono text-xs opacity-60 mt-0.5">${sfParts.join(', ')}</p>` : '';
+
+              // Winnings math shown in winnings view
               let netLabel = '';
               if (juaOn) {
-                const savesCount = savesCounts[s.playerId] || 0;
-                const finesCount = (game.juaFines || {})[s.playerId] || 0;
                 const savesCost = savesCount * firstSaveAmt;
                 const finesCost = finesCount * influenceFine;
                 const reward = positionReward(s.rank);
@@ -144,21 +153,33 @@ export function mount(container, params = {}) {
                   : fmt(d1(net));
                 netLabel = `<p class="font-mono text-sm opacity-70">${mathStr}</p>`;
               }
+
               return `
-                <div class="flex flex-col py-2">
-                  <div class="flex justify-between items-start">
-                    <div class="flex items-center gap-3">
-                      <span class="font-mono text-sm opacity-50 w-6 text-center">${s.rank}</span>
-                      <span class="font-headline font-bold text-lg uppercase">${escapeHTML(p.name || s.playerId)}</span>
+                <div class="py-2">
+                  <!-- Scores view -->
+                  <div class="score-row flex justify-between items-start">
+                    <div class="flex items-start gap-3">
+                      <span class="font-mono text-sm opacity-50 w-6 text-center mt-1">${s.rank}</span>
+                      <div>
+                        <p class="font-headline font-bold text-lg uppercase leading-tight">${escapeHTML(p.name || s.playerId)}</p>
+                        ${sfLine}
+                      </div>
                     </div>
                     <span class="font-mono text-xl font-bold">${s.total}</span>
                   </div>
-                  ${netLabel ? `<div class="text-right mt-1">${netLabel}</div>` : ''}
+                  <!-- Winnings view -->
+                  <div class="winnings-row" style="display:none">
+                    <div class="flex items-center gap-3">
+                      <span class="font-mono text-sm opacity-50 w-6 text-center">${s.rank}</span>
+                      <p class="font-headline font-bold text-lg uppercase">${escapeHTML(p.name || s.playerId)}</p>
+                    </div>
+                    ${netLabel ? `<div class="text-right mt-1">${netLabel}</div>` : ''}
+                  </div>
                 </div>
               `;
             }).join('');
 
-            // Tie breakdown explanation — only shown when jua is on and there's a tie
+            // Tie breakdown card — hidden until winnings view is active
             const hasTie = juaOn && (n1 > 1 || n2 > 1 || n3 > 1);
             let tieHtml = '';
             if (hasTie) {
@@ -190,13 +211,21 @@ export function mount(container, params = {}) {
               };
               const lines = [posLine(1, n1), posLine(2, n2), posLine(3, n3)];
               tieHtml = `
-                <div class="mt-4 bg-white text-black p-4 space-y-1">
+                <div id="tie-card" style="display:none" class="mt-4 bg-white text-black p-4 space-y-1">
                   ${lines.map((l) => `<p class="font-mono text-xs">${escapeHTML(l)}</p>`).join('')}
                 </div>
               `;
             }
 
-            return rowsHtml + tieHtml;
+            const toggleBtn = juaOn ? `
+              <div class="flex justify-end mb-3">
+                <button id="btn-toggle-view" class="font-mono text-xs uppercase tracking-widest border border-white/40 px-3 py-1.5 hover:bg-white/10 transition-colors">
+                  VIEW WINNINGS
+                </button>
+              </div>
+            ` : '';
+
+            return toggleBtn + `<div class="divide-y divide-white/20">${rowsHtml}</div>` + tieHtml;
           })()}
         </div>
 
@@ -227,6 +256,22 @@ export function mount(container, params = {}) {
 
   container.querySelector('#btn-recap')?.addEventListener('click', () => {
     router.navigate('recap', { roomCode });
+  });
+
+  let showWinnings = false;
+  container.querySelector('#btn-toggle-view')?.addEventListener('click', () => {
+    showWinnings = !showWinnings;
+    const btn = container.querySelector('#btn-toggle-view');
+    if (btn) btn.textContent = showWinnings ? 'VIEW SCORES' : 'VIEW WINNINGS';
+    container.querySelectorAll('.score-row').forEach((el) => {
+      el.style.display = showWinnings ? 'none' : 'flex';
+    });
+    container.querySelectorAll('.winnings-row').forEach((el) => {
+      el.style.display = showWinnings ? 'flex' : 'none';
+      el.style.flexDirection = 'column';
+    });
+    const tieCard = container.querySelector('#tie-card');
+    if (tieCard) tieCard.style.display = showWinnings ? 'block' : 'none';
   });
 }
 
