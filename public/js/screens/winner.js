@@ -63,7 +63,7 @@ export function mount(container, params = {}) {
         </div>
 
         <!-- Standings -->
-        <div class="w-full max-w-sm mx-auto space-y-3">
+        <div class="w-full max-w-sm mx-auto divide-y divide-white/20">
           ${(() => {
             const cfg = game.config || {};
             const juaOn = !!cfg.jua;
@@ -144,7 +144,7 @@ export function mount(container, params = {}) {
                 netLabel = `<p class="font-mono text-sm opacity-70">${mathStr}</p>`;
               }
               return `
-                <div class="flex flex-col py-2 border-b border-white/20">
+                <div class="flex flex-col py-2">
                   <div class="flex justify-between items-start">
                     <div class="flex items-center gap-3">
                       <span class="font-mono text-sm opacity-50 w-6 text-center">${s.rank}</span>
@@ -186,8 +186,8 @@ export function mount(container, params = {}) {
               };
               const lines = [posLine(1, n1), posLine(2, n2), posLine(3, n3)];
               tieHtml = `
-                <div class="mt-4 pt-4 border-t border-white/20 space-y-1">
-                  ${lines.map((l) => `<p class="font-mono text-xs opacity-60">${escapeHTML(l)}</p>`).join('')}
+                <div class="mt-4 bg-white text-black p-4 space-y-1">
+                  ${lines.map((l) => `<p class="font-mono text-xs">${escapeHTML(l)}</p>`).join('')}
                 </div>
               `;
             }
