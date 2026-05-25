@@ -3,12 +3,10 @@
 // ═══════════════════════════════════════════
 
 import * as state from '../state.js';
-import * as fb from '../firebase.js';
 import * as router from '../router.js';
 import * as bottomNav from '../components/bottom-nav.js';
 import { getGame } from '../games/registry.js';
 import { ACCENT_COLORS } from '../state.js';
-import { show as toast } from '../components/toast.js';
 import { escapeHTML } from '../utils.js';
 
 export function mount(container, params = {}) {
@@ -81,18 +79,15 @@ export function mount(container, params = {}) {
         </div>
       </main>
 
-      <!-- Actions (same buttons for host and spectators; taps are permission-gated) -->
+      <!-- Actions -->
       <footer class="p-6 space-y-3 shrink-0">
-        <button id="btn-replay" class="w-full py-4 bg-surface-container-lowest text-primary font-headline font-extrabold uppercase tracking-widest text-base transition-colors hover:bg-surface-container-high">
-          REPLAY ${gameModule.label.toUpperCase()}
-        </button>
-        <button id="btn-new-game" class="w-full py-4 border border-white/40 text-white font-headline font-extrabold uppercase tracking-widest text-base transition-colors hover:bg-white/10">
-          CHOOSE NEW GAME
+        <button id="btn-lobby" class="w-full py-4 bg-surface-container-lowest text-primary font-headline font-extrabold uppercase tracking-widest text-base transition-colors hover:bg-surface-container-high">
+          BACK TO LOBBY
         </button>
         ${trackStats ? `
-        <button id="btn-call-night" class="w-full py-4 border border-white/40 text-white font-headline font-extrabold uppercase tracking-widest text-base transition-colors hover:bg-white/10 flex items-center justify-center gap-2">
-          <span class="material-symbols-outlined text-lg" aria-hidden="true">bedtime</span>
-          CALL IT A NIGHT
+        <button id="btn-recap" class="w-full py-4 border border-white/40 text-white font-headline font-extrabold uppercase tracking-widest text-base transition-colors hover:bg-white/10 flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-lg" aria-hidden="true">bar_chart</span>
+          VIEW NIGHT RECAP
         </button>
         ` : ''}
       </footer>
@@ -103,50 +98,13 @@ export function mount(container, params = {}) {
     router.navigate('lobby', { roomCode });
   });
 
-  const guardHost = (fn) => () => {
-    if (!state.isHost()) {
-      toast('Only the host can do that');
-      return;
-    }
-    return fn();
-  };
+  container.querySelector('#btn-lobby')?.addEventListener('click', () => {
+    router.navigate('lobby', { roomCode });
+  });
 
-  container.querySelector('#btn-replay')?.addEventListener('click', guardHost(async () => {
-    const players = state.activePlayers();
-    const minPlayers = gameModule.minPlayers || 2;
-    const maxPlayers = gameModule.maxPlayers || 20;
-    if (players.length < minPlayers) {
-      toast(`Need at least ${minPlayers} players to play ${gameModule.label}`);
-      await fb.updateRoomMeta(roomCode, { status: 'lobby', activeGameId: null });
-      router.navigate('lobby', { roomCode });
-      return;
-    }
-    if (players.length > maxPlayers) {
-      toast(`${gameModule.label} supports at most ${maxPlayers} players`);
-      return;
-    }
-    const playerIds = players.map((p) => p.id);
-    const snapshot = {};
-    players.forEach((p) => {
-      snapshot[p.id] = { name: p.name, accentIndex: p.accentIndex, seatOrder: p.seatOrder };
-    });
-
-    try {
-      await fb.createGame(roomCode, game.type, game.config, playerIds, snapshot);
-      router.navigate('dashboard', { roomCode });
-    } catch (e) {
-      console.error('Replay failed:', e);
-    }
-  }));
-
-  container.querySelector('#btn-new-game')?.addEventListener('click', guardHost(async () => {
-    await fb.updateRoomMeta(roomCode, { status: 'lobby', activeGameId: null });
-    router.navigate(trackStats ? 'game-select' : 'lobby', { roomCode });
-  }));
-
-  container.querySelector('#btn-call-night')?.addEventListener('click', guardHost(async () => {
-    await fb.endNight(roomCode);
-  }));
+  container.querySelector('#btn-recap')?.addEventListener('click', () => {
+    router.navigate('recap', { roomCode });
+  });
 }
 
 export function unmount() {}
