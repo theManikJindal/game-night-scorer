@@ -129,9 +129,12 @@ export function mount(container, params = {}) {
                 const reward = positionReward(s.rank);
                 const net = reward - buyIn - savesCost - finesCost;
                 const terms = [];
-                if (s.rank === 1 && n1 === 1) {
-                  terms.push(fmt(baseShare + 20));
-                  if (pool > 0) terms.push(fmt(pool));
+                if (s.rank === 1) {
+                  // Split into base position amount and pool share, even for ties
+                  const potsCount = Math.min(n1, 3);
+                  const totalNoPool = [pot1, pot2, pot3].slice(0, potsCount).reduce((a, b) => a + b, 0) - pool;
+                  terms.push(fmt(Math.round(totalNoPool / n1)));
+                  if (pool > 0) terms.push(fmt(Math.round(pool / n1)));
                 } else if (s.rank <= 3) {
                   terms.push(fmt(Math.round(reward)));
                 }
