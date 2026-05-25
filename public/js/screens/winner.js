@@ -130,12 +130,9 @@ export function mount(container, params = {}) {
                 const reward = positionReward(s.rank);
                 const net = reward - buyIn - savesCost - finesCost;
                 const terms = [];
-                if (s.rank === 1) {
-                  // Split into base position amount and pool share, even for ties
-                  const potsCount = Math.min(n1, 3);
-                  const totalNoPool = [pot1, pot2, pot3].slice(0, potsCount).reduce((a, b) => a + b, 0) - pool;
-                  terms.push(fmt(d1(totalNoPool / n1)));
-                  if (pool > 0) terms.push(fmt(d1(pool / n1)));
+                if (s.rank === 1 && n1 === 1) {
+                  terms.push(fmt(baseShare + 20));
+                  if (pool > 0) terms.push(fmt(pool));
                 } else if (s.rank <= 3) {
                   terms.push(fmt(d1(reward)));
                 }
@@ -170,13 +167,15 @@ export function mount(container, params = {}) {
                 const label = ['1st', '2nd', '3rd'][rank - 1];
                 const pot = [pot1, pot2, pot3][rank - 1];
                 if (count === 0) return `${label} (0 players)`;
+                const base20 = r(baseShare + 20);
+                const poolPart = pool > 0 ? `+${r(pool)} ` : '';
                 if (rank === 1 && count >= 3) {
                   const each = r((pot1 + pot2 + pot3) / count);
-                  return `${label} (tie, ${count} players): +${r(pot1)} + ${r(pot2)} + ${r(pot3)} / ${count} = ${each}`;
+                  return `${label} (tie, ${count} players): ${poolPart}+(${base20}) + ${r(pot2)} + ${r(pot3)} / ${count} = ${each}`;
                 }
                 if (rank === 1 && count === 2) {
                   const each = r((pot1 + pot2) / 2);
-                  return `${label} (tie, 2 players): +${r(pot1)} + ${r(pot2)} / 2 = ${each}`;
+                  return `${label} (tie, 2 players): ${poolPart}+(${base20}) + ${r(pot2)} / 2 = ${each}`;
                 }
                 if (rank === 2 && count >= 2) {
                   const each = r((pot2 + pot3) / count);
@@ -186,6 +185,7 @@ export function mount(container, params = {}) {
                   const each = r(pot3 / count);
                   return `${label} (tie, ${count} players): +${r(pot3)} / ${count} = ${each}`;
                 }
+                if (rank === 1) return `${label} (1 player): ${poolPart}+(${base20})`;
                 return `${label} (1 player): +${r(pot)}`;
               };
               const lines = [posLine(1, n1), posLine(2, n2), posLine(3, n3)];
