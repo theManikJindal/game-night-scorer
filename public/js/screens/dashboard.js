@@ -406,21 +406,26 @@ function _render(container, roomCode) {
       const dropdownEl = content.querySelector('#round-dropdown');
       const pencilBtn = content.querySelector('#btn-edit-scores');
       if (pencilBtn && dropdownEl) {
+        const closeDropdown = () => {
+          dropdownEl.style.display = 'none';
+          document.removeEventListener('click', closeDropdown);
+        };
+
         pencilBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           const open = dropdownEl.style.display !== 'none';
-          dropdownEl.style.display = open ? 'none' : 'block';
-          if (!open) {
-            document.addEventListener('click', function closeDropdown() {
-              dropdownEl.style.display = 'none';
-              document.removeEventListener('click', closeDropdown);
-            });
+          if (open) {
+            closeDropdown();
+          } else {
+            dropdownEl.style.display = 'block';
+            document.addEventListener('click', closeDropdown);
           }
         });
+
         dropdownEl.querySelectorAll('.round-dropdown-item').forEach((item) => {
           item.addEventListener('click', (e) => {
             e.stopPropagation();
-            dropdownEl.style.display = 'none';
+            closeDropdown();
             _editLastRoundKey = item.dataset.roundKey;
             _editAdjustments = {};
             _editScoresMode = true;
