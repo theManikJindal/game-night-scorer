@@ -343,8 +343,12 @@ function _render(container, roomCode) {
       const amount = baseShare + (rank === 1 ? 20 + juaPool : rank === 2 ? 0 : -20);
       return { rank, name: pName, amount };
     });
+    const fineEntries = Object.entries(game.juaFines || {})
+      .filter(([, count]) => count > 0)
+      .sort(([, a], [, b]) => b - a)
+      .map(([pid, count]) => `${escapeHTML(snapshot[pid]?.name || pid)} x ${count}`);
     html += `
-      <div class="flex border border-outline mb-6">
+      <div class="flex border border-outline">
         ${positions.map((pos, i) => `
           <div class="flex-1 p-3 text-center ${i < 2 ? 'border-r border-outline' : ''}">
             <p class="font-mono text-[9px] uppercase tracking-widest text-outline">${rankLabels[i]}</p>
@@ -352,6 +356,9 @@ function _render(container, roomCode) {
           </div>
         `).join('')}
       </div>
+      ${fineEntries.length > 0 ? `
+        <p class="font-mono text-xs text-outline px-1 pt-1 mb-6">Fines: ${fineEntries.join(', ')}</p>
+      ` : '<div class="mb-6"></div>'}
     `;
   }
 
@@ -394,6 +401,7 @@ function _render(container, roomCode) {
         roundsMeta: game.type === 'flip7' ? spectatorMeta : [],
         roundsJuaMeta: spectatorJuaMeta,
         fineCount: (game.juaFines || {})[s.playerId] || 0,
+        hasLiveChip: liveEntry != null,
         progressPct: getProgress(s.total),
         isLeader: s.rank === 1,
         winMode: gameModule.winMode,
@@ -598,13 +606,13 @@ function _renderFlip7HostRow(standing, playerData, roundHistory, editingRoundInd
   const draft = _flip7Draft[pid];
   const hasDraft = draft && (draft.numbers.size > 0 || draft.actions.size > 0 || draft.x2);
 
-  const roundChips = roundHistory.map((pts, i) => {
+  const chipList = roundHistory.map((pts, i) => {
     const label = `${pts}${roundFlip7[i] ? ' 🔥' : ''}${roundJuaSave[i] ? ' ❤️' : ''}`;
     if (_editScoresMode && i === editingRoundIndex && _editAdjustments[pid]) {
       return `<span class="inline-block font-mono text-sm px-1.5 py-0.5" style="background:#000;color:#fff;border:1px solid #000">${label}</span>`;
     }
     return `<span class="inline-block font-mono text-sm bg-surface-container-low border border-outline-variant px-1.5 py-0.5 text-on-surface">${label}</span>`;
-  }).join('');
+  });
 
   let draftChip = '';
   if (hasDraft) {
@@ -629,14 +637,16 @@ function _renderFlip7HostRow(standing, playerData, roundHistory, editingRoundInd
           aria-label="Score ${name}">
           <div class="p-4 flex items-center gap-3">
             <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <p class="font-headline font-extrabold text-xl uppercase truncate">${name}</p>
-                ${fineCount > 0 ? `<span class="inline-block shrink-0 font-mono text-lg text-on-surface">(${fineCount} 👎)</span>` : ''}
-              </div>
-              <div class="flex gap-1 mt-1 flex-wrap items-center">
-                ${roundChips}
-                ${draftChip}
-              </div>
+              <p class="font-headline font-extrabold text-xl uppercase truncate">${name}</p>
+              ${(() => {
+                const all = draftChip ? [...chipList, draftChip] : chipList;
+                if (all.length === 0) return '';
+                let rows = '';
+                for (let i = 0; i < all.length; i += 5) {
+                  rows += `<div class="flex gap-1">${all.slice(i, i + 5).join('')}</div>`;
+                }
+                return `<div class="flex flex-col gap-1 mt-2">${rows}</div>`;
+              })()}
             </div>
             <div class="text-right shrink-0">
               <p class="font-mono text-2xl font-bold">${total}</p>
@@ -874,6 +884,7 @@ function _applyCardStyle(btn, selected) {
 function _updateDrawerScore(playerId) {
   const scoreEl = _flip7DrawerEl?.querySelector('#flip7-header-score');
   const emojiEl = _flip7DrawerEl?.querySelector('#flip7-header-emoji');
+  const firstSaveBtn = _flip7DrawerEl?.querySelector('#flip7-first-save-btn');
   if (!scoreEl) return;
   const draft = _flip7Draft[playerId];
   if (!draft) { scoreEl.textContent = '0'; if (emojiEl) emojiEl.style.display = 'none'; return; }
@@ -881,6 +892,24 @@ function _updateDrawerScore(playerId) {
   const roundPts = basePoints + (flip7 ? 15 : 0);
   scoreEl.textContent = roundPts;
   if (emojiEl) emojiEl.style.display = flip7 ? '' : 'none';
+  if (firstSaveBtn) {
+    if (flip7) {
+      if (_juaRoundData.firstSavePid === playerId) _juaRoundData.firstSavePid = null;
+      firstSaveBtn.disabled = true;
+      firstSaveBtn.classList.remove('bg-primary', 'text-on-primary', 'border-primary', 'border-outline', 'hover:border-primary');
+      firstSaveBtn.classList.add('opacity-30', 'border-outline', 'cursor-not-allowed');
+    } else {
+      firstSaveBtn.disabled = false;
+      firstSaveBtn.classList.remove('opacity-30', 'cursor-not-allowed');
+      if (_juaRoundData.firstSavePid === playerId) {
+        firstSaveBtn.classList.remove('border-outline', 'hover:border-primary');
+        firstSaveBtn.classList.add('bg-primary', 'text-on-primary', 'border-primary');
+      } else {
+        firstSaveBtn.classList.remove('bg-primary', 'text-on-primary', 'border-primary');
+        firstSaveBtn.classList.add('border-outline', 'hover:border-primary');
+      }
+    }
+  }
 }
 
 function _bindDrawerEvents(container, roomCode, playerId, draftSnapshot) {

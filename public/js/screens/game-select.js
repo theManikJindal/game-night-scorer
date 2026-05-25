@@ -198,11 +198,11 @@ function _renderConfigField(game, f, playerCount) {
             type="button"
             role="switch"
             id="config-${f.key}"
-            aria-checked="false"
-            class="w-12 h-7 border border-outline bg-surface-container-high transition-colors relative focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          ><span class="toggle-thumb absolute top-0.5 left-0.5 w-6 h-6 bg-outline transition-all"></span></button>
+            aria-checked="${String(!!game.defaultConfig[f.key])}"
+            class="w-12 h-7 border transition-colors relative focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${game.defaultConfig[f.key] ? 'bg-primary border-primary' : 'bg-surface-container-high border-outline'}"
+          ><span class="toggle-thumb absolute top-0.5 left-0.5 w-6 h-6 transition-all ${game.defaultConfig[f.key] ? 'bg-on-primary translate-x-5' : 'bg-outline'}"></span></button>
         </div>
-        <div id="config-${f.key}-subfields" class="hidden mt-3 pl-3 border-l-2 border-outline-variant">
+        <div id="config-${f.key}-subfields" class="${game.defaultConfig[f.key] ? '' : 'hidden'} mt-3 pl-3 border-l-2 border-outline-variant">
           ${subFieldsHtml}
         </div>
       </div>

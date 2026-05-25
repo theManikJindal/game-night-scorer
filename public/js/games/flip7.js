@@ -13,7 +13,7 @@ export default {
   minPlayers: 2,
   maxPlayers: 20,
   winMode: 'highest_total',
-  defaultConfig: { targetScore: 200, jua: false, juaBuyIn: 30, juaFirstSave: 5, juaInfluenceFine: 10 },
+  defaultConfig: { targetScore: 200, jua: true, juaBuyIn: 30, juaFirstSave: 5, juaInfluenceFine: 10 },
   configFields: [
     { key: 'targetScore', label: 'Win Target', type: 'number', min: 10 },
     {

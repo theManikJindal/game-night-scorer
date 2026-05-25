@@ -64,18 +64,40 @@ export function mount(container, params = {}) {
 
         <!-- Standings -->
         <div class="w-full max-w-sm mx-auto space-y-3">
-          ${standings.map((s) => {
-            const p = snapshot[s.playerId] || {};
-            return `
-              <div class="flex justify-between items-center py-2 border-b border-white/20">
-                <div class="flex items-center gap-3">
-                  <span class="font-mono text-sm opacity-50 w-6 text-center">${s.rank}</span>
-                  <span class="font-headline font-bold text-lg uppercase">${escapeHTML(p.name || s.playerId)}</span>
+          ${(() => {
+            const juaPayouts = gameModule.computeJuaPayouts?.(game);
+            const payoutByPid = {};
+            if (juaPayouts) juaPayouts.payouts.forEach((p) => { payoutByPid[p.playerId] = p.amount; });
+
+            const fines = game.juaFines || {};
+            const fineEntries = Object.entries(fines)
+              .filter(([, count]) => count > 0)
+              .sort(([, a], [, b]) => b - a)
+              .map(([pid, count]) => `${escapeHTML((snapshot[pid] || {}).name || pid)} x ${count}`);
+
+            const standingsHtml = standings.map((s) => {
+              const p = snapshot[s.playerId] || {};
+              const payout = payoutByPid[s.playerId];
+              return `
+                <div class="flex justify-between items-center py-2 border-b border-white/20">
+                  <div class="flex items-center gap-3">
+                    <span class="font-mono text-sm opacity-50 w-6 text-center">${s.rank}</span>
+                    <span class="font-headline font-bold text-lg uppercase">${escapeHTML(p.name || s.playerId)}</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="font-mono text-xl font-bold">${s.total}</span>
+                    ${payout != null ? `<p class="font-mono text-sm opacity-70">₹${payout}</p>` : ''}
+                  </div>
                 </div>
-                <span class="font-mono text-xl font-bold">${s.total}</span>
-              </div>
-            `;
-          }).join('')}
+              `;
+            }).join('');
+
+            const finesHtml = fineEntries.length > 0
+              ? `<p class="font-mono text-sm opacity-60 pt-2">Fines: ${fineEntries.join(', ')}</p>`
+              : '';
+
+            return standingsHtml + finesHtml;
+          })()}
         </div>
 
       </main>
