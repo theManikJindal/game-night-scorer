@@ -310,6 +310,21 @@ export async function updateRoomMeta(roomCode, updates) {
   await db.ref(`rooms/${roomCode}/meta`).update({ ...updates, updatedAt: Date.now() });
 }
 
+export async function releaseHost(roomCode) {
+  if (!db) return;
+  localStorage.removeItem(`gns_host_${roomCode}`);
+  state.clearHostCache(roomCode);
+  await db.ref(`rooms/${roomCode}/meta/hostKey`).set(null);
+}
+
+export async function claimHost(roomCode) {
+  if (!db) return;
+  const newKey = generateKey();
+  localStorage.setItem(`gns_host_${roomCode}`, newKey);
+  state.clearHostCache(roomCode);
+  await db.ref(`rooms/${roomCode}/meta/hostKey`).set(newKey);
+}
+
 export async function submitGameEnd(roomCode, gameId, winnerId) {
   if (!db) return;
   await db.ref(`rooms/${roomCode}/games/${gameId}`).update({
