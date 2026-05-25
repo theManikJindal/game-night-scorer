@@ -167,6 +167,7 @@ export function mount(container, params = {}) {
                     </div>
                     <span class="font-mono text-xl font-bold">${s.total}</span>
                   </div>
+                  ${juaOn ? `
                   <!-- Winnings view -->
                   <div class="winnings-row flex justify-between items-start gap-3" style="display:none">
                     <div class="flex items-start gap-3 min-w-0">
@@ -178,6 +179,7 @@ export function mount(container, params = {}) {
                     </div>
                     <p class="font-headline font-bold text-lg shrink-0">${amountStr}</p>
                   </div>
+                  ` : ''}
                 </div>
               `;
             }).join('');
