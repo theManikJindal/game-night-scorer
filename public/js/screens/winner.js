@@ -118,7 +118,7 @@ export function mount(container, params = {}) {
               return 0;
             };
 
-            return standings.map((s) => {
+            const rowsHtml = standings.map((s) => {
               const p = snapshot[s.playerId] || {};
               let netLabel = '';
               if (juaOn) {
@@ -156,6 +156,43 @@ export function mount(container, params = {}) {
                 </div>
               `;
             }).join('');
+
+            // Tie breakdown explanation — only shown when jua is on and there's a tie
+            const hasTie = juaOn && (n1 > 1 || n2 > 1 || n3 > 1);
+            let tieHtml = '';
+            if (hasTie) {
+              const r = (v) => Math.round(v);
+              const posLine = (rank, count) => {
+                const label = ['1st', '2nd', '3rd'][rank - 1];
+                const pot = [pot1, pot2, pot3][rank - 1];
+                if (count === 0) return `${label} place (0 players)`;
+                if (rank === 1 && count >= 3) {
+                  const each = r((pot1 + pot2 + pot3) / count);
+                  return `${label} place (tie, ${count} players): +₹${r(pot1)} + ₹${r(pot2)} + ₹${r(pot3)} / ${count} = ₹${each}`;
+                }
+                if (rank === 1 && count === 2) {
+                  const each = r((pot1 + pot2) / 2);
+                  return `${label} place (tie, 2 players): +₹${r(pot1)} + ₹${r(pot2)} / 2 = ₹${each}`;
+                }
+                if (rank === 2 && count >= 2) {
+                  const each = r((pot2 + pot3) / count);
+                  return `${label} place (tie, ${count} players): +₹${r(pot2)} + ₹${r(pot3)} / ${count} = ₹${each}`;
+                }
+                if (rank === 3 && count >= 2) {
+                  const each = r(pot3 / count);
+                  return `${label} place (tie, ${count} players): +₹${r(pot3)} / ${count} = ₹${each}`;
+                }
+                return `${label} place (1 player): +₹${r(pot)}`;
+              };
+              const lines = [posLine(1, n1), posLine(2, n2), posLine(3, n3)];
+              tieHtml = `
+                <div class="mt-4 pt-4 border-t border-white/20 space-y-1">
+                  ${lines.map((l) => `<p class="font-mono text-xs opacity-60">${escapeHTML(l)}</p>`).join('')}
+                </div>
+              `;
+            }
+
+            return rowsHtml + tieHtml;
           })()}
         </div>
 
