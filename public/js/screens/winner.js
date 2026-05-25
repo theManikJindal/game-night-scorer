@@ -124,15 +124,15 @@ export function mount(container, params = {}) {
               const savesCount = savesCounts[s.playerId] || 0;
               const finesCount = (game.juaFines || {})[s.playerId] || 0;
 
-              // Save/Fine label shown in scores view
+              // Save/Fines label shown in scores view
               const sfParts = [];
               if (savesCount > 0) sfParts.push(`Save: ${savesCount}`);
-              if (finesCount > 0) sfParts.push(`Fine: ${finesCount}`);
+              if (finesCount > 0) sfParts.push(`Fines: ${finesCount}`);
               const sfLine = juaOn && sfParts.length > 0
-                ? `<p class="font-mono text-xs opacity-60 mt-0.5">${sfParts.join(', ')}</p>` : '';
+                ? `<p class="font-mono text-xs opacity-60 mt-2">${sfParts.join(', ')}</p>` : '';
 
               // Winnings math shown in winnings view
-              let netLabel = '';
+              let winningsHtml = '';
               if (juaOn) {
                 const savesCost = savesCount * firstSaveAmt;
                 const finesCost = finesCount * influenceFine;
@@ -148,10 +148,15 @@ export function mount(container, params = {}) {
                 if (savesCount > 0) terms.push(`+ (-${firstSaveAmt} x ${savesCount})`);
                 if (finesCount > 0) terms.push(`+ (-${influenceFine} x ${finesCount})`);
                 terms.push(fmt(-buyIn));
-                const mathStr = terms.length > 1
-                  ? `${terms.join(' ')} = ${fmt(d1(net))}`
-                  : fmt(d1(net));
-                netLabel = `<p class="font-mono text-sm opacity-70">${mathStr}</p>`;
+                const netFmt = fmt(d1(net));
+                if (terms.length > 1) {
+                  winningsHtml = `
+                    <p class="font-mono text-xs opacity-70">${terms.join(' ')} =</p>
+                    <p class="font-mono font-bold text-lg">${netFmt}</p>
+                  `;
+                } else {
+                  winningsHtml = `<p class="font-mono font-bold text-lg">${netFmt}</p>`;
+                }
               }
 
               return `
@@ -165,7 +170,7 @@ export function mount(container, params = {}) {
                         ${sfLine}
                       </div>
                     </div>
-                    <span class="font-mono text-xl font-bold">${s.total}</span>
+                    <span class="font-mono text-xl font-bold mt-1">${s.total}</span>
                   </div>
                   <!-- Winnings view -->
                   <div class="winnings-row" style="display:none">
@@ -173,7 +178,7 @@ export function mount(container, params = {}) {
                       <span class="font-mono text-sm opacity-50 w-6 text-center">${s.rank}</span>
                       <p class="font-headline font-bold text-lg uppercase">${escapeHTML(p.name || s.playerId)}</p>
                     </div>
-                    ${netLabel ? `<div class="text-right mt-1">${netLabel}</div>` : ''}
+                    ${winningsHtml ? `<div class="pl-9 mt-1">${winningsHtml}</div>` : ''}
                   </div>
                 </div>
               `;
