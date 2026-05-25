@@ -445,6 +445,16 @@ function _render(container, roomCode) {
         _editScoresMode = false;
         try {
           await fb.patchLastRoundMulti(roomCode, game.gameId, _editLastRoundKey, pendingAdjustments, newTotals);
+          if (game.status === 'active' || game.status === 'overtime') {
+            const endResult = gameModule.checkEnd(newTotals, game.config, playerIds, rounds.length);
+            if (endResult.ended && endResult.winner) {
+              await fb.submitGameEnd(roomCode, game.gameId, endResult.winner);
+              router.navigate('winner', { roomCode });
+              return;
+            } else if (endResult.ended && endResult.overtime) {
+              toast.show('Tied! Overtime round needed');
+            }
+          }
         } catch (e) {
           console.error('Save failed:', e);
           toast.show('Save failed');
