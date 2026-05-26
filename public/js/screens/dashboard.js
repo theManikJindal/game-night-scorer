@@ -670,7 +670,7 @@ function _computeFlip7Score(draft) {
   const actions = [...draft.actions];
   const numberSum = numbers.reduce((s, n) => s + n, 0);
   const actionSum = actions.reduce((s, n) => s + n, 0);
-  const subtotal = (numberSum + actionSum) * (draft.x2 ? 2 : 1);
+  const subtotal = numberSum * (draft.x2 ? 2 : 1) + actionSum;
   return { basePoints: subtotal, flip7: numbers.length === 7 };
 }
 

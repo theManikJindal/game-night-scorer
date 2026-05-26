@@ -37,7 +37,7 @@ export default {
     if (bust) return { basePoints: 0, flip7: false };
     const numberSum = numbers.reduce((s, n) => s + n, 0);
     const actionSum = actions.reduce((s, n) => s + n, 0);
-    const subtotal = (numberSum + actionSum) * (x2 ? 2 : 1);
+    const subtotal = numberSum * (x2 ? 2 : 1) + actionSum;
     return { basePoints: subtotal, flip7: numbers.length === 7 };
   },
 
