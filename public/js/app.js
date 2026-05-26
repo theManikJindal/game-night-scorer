@@ -103,10 +103,6 @@ async function init() {
     }
   }
 
-  // Register PWA service worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  }
 }
 
 // Add shake keyframe for input validation
