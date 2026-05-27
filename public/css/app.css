@@ -182,6 +182,12 @@ input[type="number"] {
 .btn-secondary:active { transform: scale(0.98); }
 .btn-secondary:focus-visible { outline: 2px solid #0046fa; outline-offset: 2px; }
 
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible {
+  outline: 2px solid #0046fa;
+  outline-offset: 2px;
+}
+
 /* ── Modal / Bottom Sheet ── */
 .modal-overlay {
   position: fixed;
