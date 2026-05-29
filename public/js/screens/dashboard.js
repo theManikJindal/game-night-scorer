@@ -390,39 +390,37 @@ function _render(container, roomCode) {
   // Scoreboard controls bar (rounds toggle for all Flip7; sort toggle host-only)
   if (game.type === 'flip7') {
     html += `
-      <div class="flex items-center justify-end gap-3 mb-1">
-        <div class="flex items-center gap-3">
+      <div class="flex items-center justify-between mb-1">
+        <div class="relative">
+          <button id="btn-rounds-toggle" type="button"
+            class="font-mono text-xs uppercase tracking-widest flex items-center gap-0.5 transition-colors text-on-surface">
+            VIEW
+            <span class="material-symbols-outlined text-sm" aria-hidden="true">expand_more</span>
+          </button>
+          <div id="rounds-dropdown" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#fff;border:1px solid #000;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,0.15)">
+            ${[['last3', 'LAST 3'], ['all', 'ALL'], ['none', 'NONE']].map(([mode, label]) =>
+              `<button type="button" data-rounds-mode="${mode}" class="rounds-dropdown-item"
+                style="display:block;width:100%;text-align:left;padding:8px 14px;font-family:monospace;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:#000;background:${mode === _roundsDisplayMode ? '#f0f0f0' : '#fff'};border:none;cursor:pointer;white-space:nowrap"
+              >${label}</button>`
+            ).join('')}
+          </div>
+        </div>
+        ${isFlip7Host ? `
           <div class="relative">
-            <button id="btn-rounds-toggle" type="button"
+            <button id="btn-sort-toggle" type="button"
               class="font-mono text-xs uppercase tracking-widest flex items-center gap-0.5 transition-colors text-on-surface">
-              VIEW
+              SORT
               <span class="material-symbols-outlined text-sm" aria-hidden="true">expand_more</span>
             </button>
-            <div id="rounds-dropdown" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid #000;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,0.15)">
-                            ${[['last3', 'LAST 3'], ['all', 'ALL'], ['none', 'NONE']].map(([mode, label]) =>
-                `<button type="button" data-rounds-mode="${mode}" class="rounds-dropdown-item"
-                  style="display:block;width:100%;text-align:left;padding:8px 14px;font-family:monospace;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:#000;background:${mode === _roundsDisplayMode ? '#f0f0f0' : '#fff'};border:none;cursor:pointer;white-space:nowrap"
+            <div id="sort-dropdown" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid #000;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,0.15)">
+              ${[['score', 'SCORE'], ['custom', 'CUSTOM']].map(([mode, label]) =>
+                `<button type="button" data-sort-mode="${mode}" class="sort-dropdown-item"
+                  style="display:block;width:100%;text-align:left;padding:8px 14px;font-family:monospace;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:#000;background:${mode === _playerSortMode ? '#f0f0f0' : '#fff'};border:none;cursor:pointer;white-space:nowrap"
                 >${label}</button>`
               ).join('')}
             </div>
           </div>
-          ${isFlip7Host ? `
-            <div class="relative">
-              <button id="btn-sort-toggle" type="button"
-                class="font-mono text-xs uppercase tracking-widest flex items-center gap-0.5 transition-colors text-on-surface">
-                SORT
-                <span class="material-symbols-outlined text-sm" aria-hidden="true">expand_more</span>
-              </button>
-              <div id="sort-dropdown" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid #000;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,0.15)">
-                                ${[['score', 'SCORE'], ['custom', 'CUSTOM']].map(([mode, label]) =>
-                  `<button type="button" data-sort-mode="${mode}" class="sort-dropdown-item"
-                    style="display:block;width:100%;text-align:left;padding:8px 14px;font-family:monospace;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:#000;background:${mode === _playerSortMode ? '#f0f0f0' : '#fff'};border:none;cursor:pointer;white-space:nowrap"
-                  >${label}</button>`
-                ).join('')}
-              </div>
-            </div>
-          ` : ''}
-        </div>
+        ` : ''}
       </div>
     `;
   }
