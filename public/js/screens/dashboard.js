@@ -11,7 +11,7 @@ import * as toast from '../components/toast.js';
 import * as hostMenu from '../components/host-menu.js';
 import { renderRow } from '../components/player-row.js';
 import { getGame } from '../games/registry.js';
-import { escapeHTML, confirmRoundDialog } from '../utils.js';
+import { escapeHTML, confirmRoundDialog, confirmSaveDialog } from '../utils.js';
 
 // Bolt Optimization: Memoize O(R*P) round points calculation
 // The dashboard re-renders frequently on Firebase state syncs.
@@ -536,6 +536,32 @@ function _render(container, roomCode) {
         const hasScoreAdjustments = Object.keys(_editAdjustments).length > 0;
         const hasFirstSaveChange = game.config?.jua && _editFirstSavePid !== undefined;
         if (!hasScoreAdjustments && !hasFirstSaveChange) { exitEditMode(); return; }
+
+        const selectedRound = rounds[editingRoundIndex] || {};
+        const originalEntries = selectedRound.entries || {};
+        const originalFirstSavePid = selectedRound.jua?.firstSavePid || null;
+        const newFirstSavePid = hasFirstSaveChange ? (_editFirstSavePid ?? null) : originalFirstSavePid;
+
+        const changedPids = new Set([
+          ...Object.keys(_editAdjustments),
+          ...(hasFirstSaveChange && originalFirstSavePid ? [originalFirstSavePid] : []),
+          ...(hasFirstSaveChange && newFirstSavePid ? [newFirstSavePid] : []),
+        ]);
+        const changes = [...changedPids].map((pid) => {
+          const p = snapshot[pid] || {};
+          const origEntry = originalEntries[pid] || {};
+          const newEntry = _editAdjustments[pid] || origEntry;
+          return {
+            name: p.name || pid,
+            beforeScore: (origEntry.basePoints || 0) + (origEntry.flip7 ? 15 : 0),
+            beforeFirstSave: originalFirstSavePid === pid,
+            afterScore: (newEntry.basePoints || 0) + (newEntry.flip7 ? 15 : 0),
+            afterFirstSave: newFirstSavePid === pid,
+            flip7: origEntry.flip7 || false,
+          };
+        });
+        const confirmed = await confirmSaveDialog(changes);
+        if (!confirmed) return;
         const patchedRounds = rounds.map((rnd, i) =>
           i === editingRoundIndex
             ? { ...rnd, entries: { ...(rnd.entries || {}), ..._editAdjustments } }
@@ -601,25 +627,29 @@ function _renderFlip7HostRow(standing, playerData, roundHistory, editingRoundInd
   const draft = _flip7Draft[pid];
   const hasDraft = draft && (draft.numbers.size > 0 || draft.actions.size > 0 || draft.x2);
 
-  const chipList = roundHistory.map((pts, i) => {
-    const isEditingRound = _editScoresMode && i === editingRoundIndex;
-    const showHeart = (isEditingRound && _editFirstSavePid !== undefined)
-      ? _editFirstSavePid === pid
-      : roundJuaSave[i];
-    const label = `${pts}${roundFlip7[i] ? ' 🔥' : ''}${showHeart ? ' ❤️' : ''}`;
-    if (isEditingRound) {
-      return `<span class="inline-block font-mono text-sm px-1.5 py-0.5" style="background:#000;color:#fff;border:1px solid #000">${label}</span>`;
-    }
-    return `<span class="inline-block font-mono text-sm bg-surface-container-low border border-outline-variant px-1.5 py-0.5 text-on-surface">${label}</span>`;
-  });
+  const chipList = roundHistory
+    .map((pts, i) => {
+      const isEditingRound = _editScoresMode && i === editingRoundIndex;
+      if (_editScoresMode && !isEditingRound) return null;
+      const showHeart = (isEditingRound && _editFirstSavePid !== undefined)
+        ? _editFirstSavePid === pid
+        : roundJuaSave[i];
+      const label = `${pts}${roundFlip7[i] ? ' 🔥' : ''}${showHeart ? ' ❤️' : ''}`;
+      const firstSaveChanged = _editFirstSavePid !== undefined && (_editFirstSavePid === pid) !== Boolean(roundJuaSave[i]);
+      if (isEditingRound && (_editAdjustments[pid] || firstSaveChanged)) {
+        return `<span class="inline-block font-mono text-sm px-1.5 py-0.5" style="background:#000;color:#fff;border:1px solid #000">${label}</span>`;
+      }
+      return `<span class="inline-block font-mono text-sm bg-surface-container-low border border-outline-variant px-1.5 py-0.5 text-on-surface">${label}</span>`;
+    })
+    .filter(Boolean);
 
   let draftChip = '';
-  if (hasDraft) {
+  if (!_editScoresMode && hasDraft) {
     const { basePoints, flip7 } = _computeFlip7Score(draft);
     const roundPts = basePoints + (flip7 ? 15 : 0);
     const chipLabel = `${roundPts}${flip7 ? ' 🔥' : ''}${isLiveFirstSave ? ' ❤️' : ''}`;
     draftChip = `<span class="inline-block font-mono text-sm px-1.5 py-0.5" style="background:#000;color:#fff;border:1px solid #000">${chipLabel}</span>`;
-  } else if (isLiveFirstSave) {
+  } else if (!_editScoresMode && isLiveFirstSave) {
     draftChip = `<span class="inline-block font-mono text-sm px-1.5 py-0.5 border border-outline-variant">0 ❤️</span>`;
   }
 

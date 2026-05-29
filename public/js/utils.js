@@ -79,3 +79,63 @@ export function confirmRoundDialog(playerScores) {
     el.querySelector('#crd-confirm').addEventListener('click', () => cleanup(true));
   });
 }
+
+/**
+ * Confirm dialog for saving edits.
+ * changes: Array of { name, beforeScore, beforeFirstSave, afterScore, afterFirstSave, flip7 }.
+ * Returns Promise<boolean>.
+ */
+export function confirmSaveDialog(changes) {
+  const scoreLabel = (score, firstSave, flip7) => {
+    const parts = [];
+    if (flip7) parts.push('🔥');
+    if (firstSave) parts.push('❤️');
+    parts.push(score);
+    return parts.join(' ');
+  };
+
+  return new Promise((resolve) => {
+    const el = document.createElement('div');
+    el.className = 'fixed inset-0 z-50 flex items-center justify-center px-6';
+    el.innerHTML = `
+      <div id="csd-backdrop" class="absolute inset-0 bg-black/50"></div>
+      <div class="relative w-full max-w-sm bg-surface-container-lowest border-2 border-outline">
+        <div class="px-5 pt-5 pb-3 border-b border-outline-variant">
+          <p class="font-headline font-bold text-xl uppercase">Save changes?</p>
+        </div>
+        <div class="px-5 pt-3 pb-2 max-h-48 overflow-y-auto">
+          <div style="display:grid;grid-template-columns:1fr auto auto;column-gap:2rem;row-gap:0.5rem;align-items:center;">
+            <div></div>
+            <div class="font-mono text-[10px] uppercase tracking-widest text-outline text-right">Before</div>
+            <div class="font-mono text-[10px] uppercase tracking-widest text-outline text-right">After</div>
+            ${changes.map((p) => `
+              <span class="font-headline font-bold text-sm uppercase truncate">${escapeHTML(p.name)}</span>
+              <span class="font-mono text-sm text-right">${scoreLabel(p.beforeScore, p.beforeFirstSave, p.flip7)}</span>
+              <span class="font-mono text-sm text-right">${scoreLabel(p.afterScore, p.afterFirstSave, p.flip7)}</span>
+            `).join('')}
+          </div>
+        </div>
+        <div class="px-5 pb-5 pt-3 flex gap-2">
+          <button id="csd-cancel" type="button" class="flex-1 btn-secondary py-2 text-sm">CANCEL</button>
+          <button id="csd-confirm" type="button" class="flex-1 btn-primary py-2 text-sm flex items-center justify-center gap-1">
+            SAVE
+            <span aria-hidden="true" class="material-symbols-outlined text-base">check</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(el);
+    document.body.style.overflow = 'hidden';
+
+    const cleanup = (result) => {
+      document.body.style.overflow = '';
+      el.remove();
+      resolve(result);
+    };
+
+    el.querySelector('#csd-backdrop').addEventListener('click', () => cleanup(false));
+    el.querySelector('#csd-cancel').addEventListener('click', () => cleanup(false));
+    el.querySelector('#csd-confirm').addEventListener('click', () => cleanup(true));
+  });
+}
