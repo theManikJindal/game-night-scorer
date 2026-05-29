@@ -394,7 +394,6 @@ function _render(container, roomCode) {
         <div class="relative">
           <button id="btn-rounds-toggle" type="button"
             class="font-mono text-xs uppercase tracking-widest flex items-center gap-0.5 transition-colors text-on-surface">
-            <span class="material-symbols-outlined text-sm" aria-hidden="true">history</span>
             VIEW: ${_roundsDisplayMode === 'none' ? 'NONE' : _roundsDisplayMode === 'all' ? 'ALL' : 'LAST 3'}
             <span class="material-symbols-outlined text-sm" aria-hidden="true">expand_more</span>
           </button>
