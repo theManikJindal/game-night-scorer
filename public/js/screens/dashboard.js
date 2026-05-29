@@ -394,7 +394,7 @@ function _render(container, roomCode) {
         <div class="flex items-center gap-3">
           <div class="relative">
             <button id="btn-rounds-toggle" type="button"
-              class="font-mono text-[9px] uppercase tracking-widest flex items-center gap-0.5 transition-colors text-on-surface">
+              class="font-mono text-xs uppercase tracking-widest flex items-center gap-0.5 transition-colors text-on-surface">
               VIEW
               <span class="material-symbols-outlined text-sm" aria-hidden="true">expand_more</span>
             </button>
@@ -410,7 +410,7 @@ function _render(container, roomCode) {
           ${isFlip7Host ? `
             <div class="relative">
               <button id="btn-sort-toggle" type="button"
-                class="font-mono text-[9px] uppercase tracking-widest flex items-center gap-0.5 transition-colors text-on-surface">
+                class="font-mono text-xs uppercase tracking-widest flex items-center gap-0.5 transition-colors text-on-surface">
                 SORT
                 <span class="material-symbols-outlined text-sm" aria-hidden="true">expand_more</span>
               </button>
