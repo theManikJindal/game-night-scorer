@@ -317,7 +317,7 @@ async function _submitRound(container, roomCode, initialGame, gameModule) {
 
   const btn = container.querySelector('#btn-submit-round');
   btn.disabled = true;
-  btn.innerHTML = '<div class="spinner mx-auto"></div>';
+  btn.innerHTML = '<div class="spinner mx-auto"></div><span class="sr-only">Loading...</span>';
 
   // Firebase RTDB silently queues writes when offline — the await hangs until
   // reconnected. Watch connection state so the user knows to wait, not retry.

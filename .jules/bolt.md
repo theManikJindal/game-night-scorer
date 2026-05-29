@@ -20,3 +20,6 @@
 ## 2024-05-18 - [isHost Synchronous localStorage Reads]
 **Learning:** Found that `isHost()` in `public/js/state.js` reads `localStorage` synchronously. Because this function is called frequently during UI rendering cycles (e.g., in `recap.js`, `dashboard.js`), reading from disk repeatedly blocks the main thread unnecessarily.
 **Action:** Always memoize synchronous `localStorage` reads in hot paths to prevent micro-stutters during UI rendering.
+## 2024-05-25 - Prefetch vs Preload for background assets
+**Learning:** Adding a `<link rel="preload">` for a heavy image asset that is NOT immediately visible on the initial screen (e.g., a sprite sheet for an overlay on a later page) is a performance anti-pattern. It forces the browser to prioritize that download, competing with critical CSS/JS and delaying the Largest Contentful Paint (LCP) of the initial screen.
+**Action:** Always use `<link rel="prefetch">` for assets that are required for subsequent interactions or screens, allowing the browser to download them in the background during idle time without blocking the critical render path.
