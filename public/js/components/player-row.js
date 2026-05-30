@@ -32,6 +32,7 @@ export function renderRow({
   isLeader = false,
   winMode = 'highest_total',
   isInactive = false,
+  fineCount = 0,
 }) {
   const color = ACCENT_COLORS[accentIndex % ACCENT_COLORS.length];
   const bgClass = 'bg-surface-container-lowest';
@@ -58,10 +59,14 @@ export function renderRow({
     }
     return `<span class="inline-block font-mono text-sm bg-surface-container-low border border-outline-variant px-1.5 py-0.5 text-on-surface">${label}</span>`;
   });
-  const roundChips = chipList.length === 0 ? '' : (() => {
+  const fineChips = fineCount > 0
+    ? [`<span class="inline-block font-mono text-sm bg-surface-container-low border border-outline-variant px-1.5 py-0.5 text-on-surface">👎 ${fineCount}</span>`]
+    : [];
+  const allChips = [...fineChips, ...chipList];
+  const roundChips = allChips.length === 0 ? '' : (() => {
     let rows = '';
-    for (let i = 0; i < chipList.length; i += 5) {
-      rows += `<div class="flex gap-1">${chipList.slice(i, i + 5).join('')}</div>`;
+    for (let i = 0; i < allChips.length; i += 5) {
+      rows += `<div class="flex gap-1">${allChips.slice(i, i + 5).join('')}</div>`;
     }
     return rows;
   })();
@@ -77,7 +82,7 @@ export function renderRow({
           <div class="p-4 flex items-center gap-3">
             <div class="flex-1 min-w-0">
               <p class="font-headline font-extrabold text-xl uppercase truncate">${escapeHTML(name)}</p>
-              ${rounds.length > 0 ? `<div class="flex flex-col gap-1 mt-2">${roundChips}</div>` : ''}
+              ${allChips.length > 0 ? `<div class="flex flex-col gap-1 mt-2">${roundChips}</div>` : ''}
             </div>
             <div class="text-right shrink-0">
               <p class="font-mono text-2xl font-bold">${displayTotal}</p>

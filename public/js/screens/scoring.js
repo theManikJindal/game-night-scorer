@@ -10,7 +10,7 @@ import * as bottomNav from '../components/bottom-nav.js';
 import * as hostMenu from '../components/host-menu.js';
 import { getGame } from '../games/registry.js';
 import { ACCENT_COLORS } from '../state.js';
-import { escapeHTML } from '../utils.js';
+import { escapeHTML, confirmRoundDialog } from '../utils.js';
 
 export function mount(container, params = {}) {
   const roomCode = params.roomCode || state.get('roomCode');
@@ -307,6 +307,13 @@ async function _submitRound(container, roomCode, initialGame, gameModule) {
   // Check end condition
   const newRoundCount = rounds.length + 1;
   const endResult = gameModule.checkEnd(newTotals, game.config, playerIds, newRoundCount);
+
+  const playerScores = activePlayerIds.map((pid) => ({
+    name: playersMap[pid]?.name || pid,
+    score: (newTotals[pid] || 0) - (totals[pid] || 0),
+  }));
+  const confirmed = await confirmRoundDialog(playerScores);
+  if (!confirmed) return;
 
   const btn = container.querySelector('#btn-submit-round');
   btn.disabled = true;
