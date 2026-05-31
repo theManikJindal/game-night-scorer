@@ -55,33 +55,37 @@ export function mount(container, params = {}) {
       <!-- Viewer status panel (spectator only) -->
       <div id="viewer-label" class="mb-6" style="display:none"></div>
 
-      <!-- Host-only: Add Player -->
-      <div id="host-controls" style="display:none">
-        <!-- Always-visible inline add. Mid-game adds are allowed; the new player joins the next game. -->
-        <div id="add-player-row" class="flex gap-2 mb-2">
-          <label for="input-player-name" class="sr-only">Add Player</label>
-          <input
-            id="input-player-name"
-            type="text"
-            maxlength="12"
-            placeholder="Add Player"
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="characters"
-            class="flex-1 bg-surface-container-lowest border border-outline font-headline font-bold text-base uppercase py-3 px-4 placeholder:text-outline placeholder:normal-case placeholder:font-normal focus:outline-none focus:border-primary transition-colors"
-          >
-          <button id="btn-confirm-add" aria-label="Add Player" title="Add Player" class="bg-primary text-on-primary px-4 font-headline font-bold text-sm uppercase tracking-widest flex items-center gap-1 hover:opacity-90 transition-opacity shrink-0">
-            <span class="material-symbols-outlined text-lg" aria-hidden="true">add</span>
-          </button>
-        </div>
-        <div id="name-suggestions" class="mb-4 flex items-start gap-2"></div>
-      </div>
-
       <!-- Players heading (everyone) -->
       <h2 class="font-headline font-extrabold uppercase text-lg tracking-widest mb-6">PLAYERS</h2>
 
-      <!-- Player List -->
-      <div id="player-list" class="flex flex-col gap-1"></div>
+      <!-- Players grid: 2 columns; each player is a tile and the host gets an add tile first. -->
+      <div id="players-grid" class="grid grid-cols-2 gap-2">
+        <!-- Add Player tile (host only, first). Type a name + Enter to create the tile. -->
+        <div id="add-player-tile" class="bg-surface-container-lowest border border-outline" style="display:none">
+          <div class="h-1.5 w-full bg-primary"></div>
+          <div class="p-4">
+            <label for="input-player-name" class="sr-only">Add Player</label>
+            <input
+              id="input-player-name"
+              type="text"
+              maxlength="12"
+              placeholder="Add player"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="characters"
+              class="bg-transparent font-headline font-extrabold text-xl uppercase w-full border-0 p-0 focus:outline-none placeholder:text-primary focus:placeholder:text-transparent"
+            >
+          </div>
+        </div>
+
+        <!-- Player tiles render here (display:contents so they flow in the grid) -->
+        <div id="player-list" class="contents"></div>
+      </div>
+
+      <!-- Quick-add name chips (host only) -->
+      <div id="host-controls" class="mt-4" style="display:none">
+        <div id="name-suggestions" class="flex items-start gap-2"></div>
+      </div>
 
       <!-- Start Game (host only) -->
       <div id="start-section" class="mt-4" style="display:none">
@@ -222,8 +226,7 @@ async function _callItANight(roomCode) {
 }
 
 function _bindEvents(container, roomCode) {
-  // Add player — inline always-visible
-  container.querySelector('#btn-confirm-add')?.addEventListener('click', () => _addPlayer(container, roomCode));
+  // Add player — the input is the first chip; Enter adds the typed name.
   const nameInput = container.querySelector('#input-player-name');
   nameInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') _addPlayer(container, roomCode);
@@ -322,9 +325,6 @@ function _startWatching(roomCode, container) {
     const isHost = state.isHost();
     const lobby = data.lobby || {};
     const players = data.players || {};
-    const games = data.games || {};
-    const trackStats = lobby.trackStats !== false;
-    const hasPlayedGames = Object.values(games).some((g) => g.rounds && Object.keys(g.rounds).length > 0);
 
     // The lobby is always a nav tab: it shows on its own when no game is active,
     // and alongside the game tab during a Flip 7 game. Only a non-Flip 7 game in
@@ -336,33 +336,37 @@ function _startWatching(roomCode, container) {
       bottomNav.show('lobby');
     }
 
-    // Show/hide host controls
-    container.querySelector('#host-controls').style.display = isHost ? 'block' : 'none';
+    // Show/hide host controls (add-player tile + quick-add chips). Hidden once
+    // the night has ended — no more players can be added.
+    const canAdd = isHost && lobby.status !== 'night-ended';
+    const addTile = container.querySelector('#add-player-tile');
+    if (addTile) addTile.style.display = canAdd ? 'block' : 'none';
+    container.querySelector('#host-controls').style.display = canAdd ? 'block' : 'none';
     const viewerLabelEl = container.querySelector('#viewer-label');
     if (viewerLabelEl) {
       if (isHost) {
         viewerLabelEl.style.display = 'none';
       } else {
         viewerLabelEl.style.display = 'block';
-        const isGameActive = lobby.status === 'playing' && lobby.activeGameId;
-        const showRecap = trackStats && hasPlayedGames;
-        const nightEnded = lobby.status === 'night-ended';
-        const spectatorSubLine = nightEnded
-          ? 'Host has ended the game night'
-          : 'Waiting for the host to start the game';
-        const spectatorSubSize = nightEnded ? 'text-sm' : 'text-base';
-        viewerLabelEl.innerHTML = isGameActive
-          ? `${showRecap ? `<button id="btn-spectator-recap" class="w-full bg-surface-container-lowest border border-outline py-3 font-headline font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors">
-                 <span aria-hidden="true" class="material-symbols-outlined text-sm">bar_chart</span>
-                 VIEW NIGHT RECAP
-               </button>` : ''}`
-          : `<div class="bg-surface-container-high border border-outline p-4 text-center">
-               <p class="font-headline font-bold text-lg uppercase tracking-widest text-outline">SPECTATOR MODE</p>
-               <p class="font-body ${spectatorSubSize} text-on-surface-variant mt-1">${spectatorSubLine}</p>
-             </div>`;
-        viewerLabelEl.querySelector('#btn-spectator-recap')?.addEventListener('click', () => {
-          router.navigate('recap', { roomCode });
-        });
+        // Always show the Spectator Mode card; the sub-line reflects room state.
+        const gameActive = lobby.status === 'playing' && state.currentGame()?.status === 'active';
+        let spectatorSubLine, spectatorSubSize;
+        if (gameActive) {
+          spectatorSubLine = 'Host has started the game...';
+          spectatorSubSize = 'text-base';
+        } else if (lobby.status === 'night-ended') {
+          spectatorSubLine = 'Host has ended the game night';
+          spectatorSubSize = 'text-sm';
+        } else {
+          spectatorSubLine = 'Waiting for the host to start the game';
+          spectatorSubSize = 'text-base';
+        }
+        viewerLabelEl.innerHTML = `
+          <div class="bg-surface-container-high border border-outline p-4 text-center">
+            <p class="font-headline font-bold text-lg uppercase tracking-widest text-outline">SPECTATOR MODE</p>
+            <p class="font-body ${spectatorSubSize} text-on-surface-variant mt-1">${spectatorSubLine}</p>
+          </div>
+        `;
       }
     }
     container.querySelector('#start-section').style.display = isHost ? 'block' : 'none';
@@ -373,8 +377,6 @@ function _startWatching(roomCode, container) {
     // frozen, so removing a player from the roster can't affect jua/standings.
     const isPlaying = lobby.status === 'playing';
     const gameInProgress = state.currentGame()?.status === 'active';
-    const addRow = container.querySelector('#add-player-row');
-    if (addRow) addRow.style.display = isHost ? 'flex' : 'none';
     _renderPlayers(container, players, isHost, roomCode, gameInProgress);
     _showSuggestions(container, roomCode);
 
@@ -437,7 +439,7 @@ function _renderPlayers(container, players, isHost, roomCode, gameInProgress = f
   const sorted = Object.values(players).sort((a, b) => a.seatOrder - b.seatOrder);
   if (sorted.length === 0) {
     list.innerHTML = `
-      <div class="text-center py-12">
+      <div class="col-span-2 text-center py-12">
         <span aria-hidden="true" class="material-symbols-outlined text-4xl text-outline mb-2">group_add</span>
         <p class="font-body text-base text-on-surface-variant">${isHost ? 'Add at least 3 players to start a game.' : 'Waiting for the host to add players\u2026'}</p>
       </div>
@@ -445,22 +447,21 @@ function _renderPlayers(container, players, isHost, roomCode, gameInProgress = f
     return;
   }
 
+  const canRemove = isHost && !gameInProgress;
   list.innerHTML = sorted
     .map((p) => {
       const color = ACCENT_COLORS[p.accentIndex % ACCENT_COLORS.length];
       return `
-        <div class="bg-surface-container-lowest border border-outline flex items-center">
-          <div class="w-1.5 self-stretch" style="background:${color}"></div>
-          <div class="flex-1 p-4 flex items-center gap-3">
-            <div class="flex-1 min-w-0">
-              <p class="font-headline font-extrabold text-xl uppercase truncate">${escapeHTML(p.name)}</p>
-            </div>
-            ${(isHost && !gameInProgress) ? `
-              <button class="player-remove p-1.5 hover:bg-surface-container-high transition-colors" data-id="${escapeHTML(p.id)}" title="Remove" aria-label="Remove ${escapeHTML(p.name)}">
-                <span aria-hidden="true" class="material-symbols-outlined text-[21px] text-error">close</span>
-              </button>
-            ` : ''}
+        <div class="relative bg-surface-container-lowest border border-outline">
+          <div class="h-1.5 w-full" style="background:${color}"></div>
+          <div class="p-4 ${canRemove ? 'pr-9' : ''}">
+            <p class="font-headline font-extrabold text-xl uppercase truncate">${escapeHTML(p.name)}</p>
           </div>
+          ${canRemove ? `
+            <button class="player-remove absolute top-2.5 right-1.5 p-1 hover:bg-surface-container-high transition-colors" data-id="${escapeHTML(p.id)}" title="Remove" aria-label="Remove ${escapeHTML(p.name)}">
+              <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-error">close</span>
+            </button>
+          ` : ''}
         </div>
       `;
     })
