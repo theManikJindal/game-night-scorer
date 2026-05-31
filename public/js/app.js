@@ -68,14 +68,18 @@ async function init() {
   // Start router — _onHashChange fires here with state already populated
   router.init('screen-container');
 
-  // Auto-navigate on night-ended / night-resumed status changes
+  // Auto-navigate on night-ended / night-resumed status changes.
   state.on('roomLobby', (newLobby, prevLobby) => {
     if (!newLobby) return;
     const screen = router.currentScreen();
     const roomCode = newLobby.roomCode || state.get('roomCode');
     if (!roomCode) return;
 
-    if (newLobby.status === 'night-ended' && screen !== 'recap') {
+    // Only redirect to recap on the *transition* into night-ended (or a cold
+    // load that lands locked). Once locked, leave navigation alone so host and
+    // spectators can move freely between tabs without being yanked back.
+    const justLocked = newLobby.status === 'night-ended' && prevLobby?.status !== 'night-ended';
+    if (justLocked && screen !== 'recap') {
       router.navigate('recap', { roomCode });
     } else if (prevLobby?.status === 'night-ended' && newLobby.status === 'waiting') {
       if (screen === 'recap') router.navigate('lobby', { roomCode });

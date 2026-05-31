@@ -31,14 +31,21 @@ function flip7Tabs(game) {
   const tabs = [LOBBY_TAB];
 
   // The game tab is always labeled with the game's name (e.g. "FLIP 7"). While
-  // in progress it opens the board; once finished (but no new game started yet)
-  // it opens the winner screen. Gate "in progress" on lobby.status rather than
-  // the game's own status, since ending flips lobby.status back to 'waiting'.
-  const gameLabel = (getGame(game?.type)?.label || 'Game').toUpperCase();
-  if (lobby.status === 'playing' && game?.status === 'active') {
-    tabs.push({ id: 'dashboard', icon: 'dashboard', label: gameLabel });
-  } else if (game?.status === 'finished' && game?.winner) {
-    tabs.push({ id: 'winner', icon: 'dashboard', label: gameLabel });
+  // in progress it opens the board; otherwise it opens the results (winner) so
+  // a finished or locked-night game stays reachable. Gate "in progress" on
+  // lobby.status, since ending flips it back to 'waiting'/'night-ended'.
+  if (game) {
+    const gameLabel = (getGame(game.type)?.label || 'Game').toUpperCase();
+    const inProgress = lobby.status === 'playing' && game.status === 'active';
+    if (inProgress) {
+      tabs.push({ id: 'dashboard', icon: 'dashboard', label: gameLabel });
+    } else if (game.status === 'finished' && game.winner) {
+      tabs.push({ id: 'winner', icon: 'dashboard', label: gameLabel });
+    } else if (lobby.status === 'night-ended') {
+      // Locked night — keep the game reachable for review (results if there's a
+      // winner, otherwise the board/standings).
+      tabs.push({ id: game.winner ? 'winner' : 'dashboard', icon: 'dashboard', label: gameLabel });
+    }
   }
 
   // Night recap appears once there's something to show (stats tracking on and

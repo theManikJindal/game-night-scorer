@@ -3,10 +3,8 @@
 // ═══════════════════════════════════════════
 
 import * as state from '../state.js';
-import * as fb from '../firebase.js';
 import * as router from '../router.js';
 import * as bottomNav from '../components/bottom-nav.js';
-import * as toast from '../components/toast.js';
 import { computeNightStats } from '../stats.js';
 import { ACCENT_COLORS } from '../state.js';
 import { escapeHTML } from '../utils.js';
@@ -17,10 +15,10 @@ export function mount(container, params = {}) {
   const locked = lobby.status === 'night-ended';
   const isHost = state.isHost();
 
-  // Recap is a bottom-nav tab only in a Flip 7 night, and only while unlocked
-  // (a locked night is a terminal screen). All other cases keep the old no-nav.
+  // Recap is a bottom-nav tab in a Flip 7 night — including once it's locked,
+  // so the recap stays browsable alongside the lobby/results.
   const isFlip7Night = Object.values(state.get('games') || {}).some((g) => g.type === 'flip7');
-  if (!locked && isFlip7Night) {
+  if (isFlip7Night) {
     bottomNav.show('recap');
   } else {
     bottomNav.hide();
@@ -63,9 +61,6 @@ export function mount(container, params = {}) {
         }</p>
       </div>
     `;
-    if (locked && isHost) {
-      _renderStartNewNightFooter(container, roomCode);
-    }
     return;
   }
 
@@ -261,23 +256,13 @@ export function mount(container, params = {}) {
 
   // ── Footer Button ──
   if (locked) {
-    if (isHost) {
-      html += `
-        <div class="mt-8 space-y-3">
-          <button id="btn-start-new-night" class="btn-primary w-full flex items-center justify-center gap-2">
-            <span aria-hidden="true" class="material-symbols-outlined text-lg">restart_alt</span>
-            START NEW NIGHT
-          </button>
-          <p class="font-mono text-[10px] text-outline text-center uppercase">KEEPS PLAYERS, CLEARS GAMES, UNLOCKS THE ROOM</p>
-        </div>
-      `;
-    } else {
-      html += `
-        <div class="mt-8 text-center">
-          <p class="font-mono text-[10px] text-outline uppercase">Night locked by host</p>
-        </div>
-      `;
-    }
+    // Locked night is read-only. Leaving happens from the Lobby tab; the host
+    // starts a fresh game night from the landing screen.
+    html += `
+      <div class="mt-8 text-center">
+        <p class="font-mono text-[10px] text-outline uppercase">Night locked${isHost ? ' — start a new night from the home screen' : ' by host'}</p>
+      </div>
+    `;
   } else {
     html += `
       <div class="mt-8">
@@ -294,46 +279,6 @@ export function mount(container, params = {}) {
 
   container.querySelector('#btn-back-lobby')?.addEventListener('click', () => {
     router.navigate('lobby', { roomCode }, 'back');
-  });
-
-  container.querySelector('#btn-start-new-night')?.addEventListener('click', async () => {
-    if (!state.isHost()) {
-      toast.show('Only the host can do that');
-      return;
-    }
-    const confirmed = window.confirm('Start a new night? This archives tonight\u2019s games and clears the scoreboard. Players are kept.');
-    if (!confirmed) return;
-    try {
-      await fb.startNewNight(roomCode);
-    } catch (e) {
-      console.error('Start new night failed:', e);
-      toast.show('Failed to start new night');
-    }
-  });
-}
-
-function _renderStartNewNightFooter(container, roomCode) {
-  const footer = document.createElement('div');
-  footer.className = 'p-6 pb-12';
-  footer.innerHTML = `
-    <button id="btn-start-new-night" class="btn-primary w-full flex items-center justify-center gap-2">
-      <span aria-hidden="true" class="material-symbols-outlined text-lg">restart_alt</span>
-      START NEW NIGHT
-    </button>
-    <p class="font-mono text-[10px] text-outline text-center uppercase mt-2">UNLOCKS THE ROOM FOR A FRESH NIGHT</p>
-  `;
-  container.appendChild(footer);
-  footer.querySelector('#btn-start-new-night')?.addEventListener('click', async () => {
-    if (!state.isHost()) {
-      toast.show('Only the host can do that');
-      return;
-    }
-    try {
-      await fb.startNewNight(roomCode);
-    } catch (e) {
-      console.error('Start new night failed:', e);
-      toast.show('Failed to start new night');
-    }
   });
 }
 

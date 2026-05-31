@@ -42,13 +42,22 @@ export function mount(container, params = {}) {
   container.innerHTML = `
     <div class="p-6 pb-32">
 
+      <!-- Leave Lobby (top, once the night is locked — host + spectators) -->
+      <div id="leave-lobby-section" class="mb-6" style="display:none">
+        <button id="btn-leave-lobby" class="btn-primary w-full flex items-center justify-center gap-2">
+          <span aria-hidden="true" class="material-symbols-outlined text-lg">logout</span>
+          LEAVE LOBBY
+        </button>
+      </div>
+
       <!-- Finished game actions (host only, after a game ends) -->
       <div id="finished-game-section" class="mb-6 flex flex-col gap-3" style="display:none"></div>
 
+      <!-- Viewer status panel (spectator only) -->
+      <div id="viewer-label" class="mb-6" style="display:none"></div>
+
       <!-- Host-only: Add Player -->
       <div id="host-controls" style="display:none">
-        <h2 class="font-headline font-extrabold uppercase text-sm tracking-widest mb-4">PLAYERS</h2>
-
         <!-- Always-visible inline add. Mid-game adds are allowed; the new player joins the next game. -->
         <div id="add-player-row" class="flex gap-2 mb-2">
           <label for="input-player-name" class="sr-only">Add Player</label>
@@ -60,33 +69,20 @@ export function mount(container, params = {}) {
             autocomplete="off"
             autocorrect="off"
             autocapitalize="characters"
-            class="flex-1 bg-surface-container-lowest border border-outline font-headline font-bold text-sm uppercase py-3 px-4 placeholder:text-outline placeholder:normal-case placeholder:font-normal focus:outline-none focus:border-primary transition-colors"
+            class="flex-1 bg-surface-container-lowest border border-outline font-headline font-bold text-base uppercase py-3 px-4 placeholder:text-outline placeholder:normal-case placeholder:font-normal focus:outline-none focus:border-primary transition-colors"
           >
           <button id="btn-confirm-add" aria-label="Add Player" title="Add Player" class="bg-primary text-on-primary px-4 font-headline font-bold text-sm uppercase tracking-widest flex items-center gap-1 hover:opacity-90 transition-opacity shrink-0">
             <span class="material-symbols-outlined text-lg" aria-hidden="true">add</span>
           </button>
         </div>
-        <div id="name-suggestions" class="mb-4 flex flex-wrap items-center gap-2"></div>
+        <div id="name-suggestions" class="mb-4 flex items-start gap-2"></div>
       </div>
 
-      <!-- Viewer label -->
-      <div id="viewer-label" class="mb-4" style="display:none"></div>
+      <!-- Players heading (everyone) -->
+      <h2 class="font-headline font-extrabold uppercase text-lg tracking-widest mb-4">PLAYERS</h2>
 
       <!-- Player List -->
       <div id="player-list" class="flex flex-col gap-1"></div>
-
-      <!-- Track Stats Toggle (host only, before first game) -->
-      <div id="stats-toggle-section" class="mt-6" style="display:none">
-        <div class="bg-surface-container-lowest border border-outline p-4 flex items-center justify-between">
-          <div class="flex-1 mr-4">
-            <p class="font-headline font-bold text-sm uppercase">Track Tonight's Stats</p>
-            <p class="font-mono text-[10px] text-outline mt-0.5">See MVP, per-game breakdowns, and player highlights at the end of the night</p>
-          </div>
-          <button id="btn-stats-toggle" role="switch" aria-checked="false" aria-label="Track Tonight's Stats" class="w-12 h-7 border border-outline bg-surface-container-high transition-all relative shrink-0" data-on="false">
-            <div class="absolute top-[2px] left-[2px] w-[22px] h-[22px] bg-outline transition-transform" aria-hidden="true"></div>
-          </button>
-        </div>
-      </div>
 
       <!-- Start Game (host only) -->
       <div id="start-section" class="mt-4" style="display:none">
@@ -166,7 +162,7 @@ function _openLobbyMenu(roomCode) {
   const games = state.get('games') || {};
   const trackStats = lobby.trackStats !== false;
   const hasFinishedGame = Object.values(games).some((g) => g.status === 'finished');
-  const canCallNight = trackStats && hasFinishedGame;
+  const canCallNight = trackStats && hasFinishedGame && lobby.status !== 'night-ended';
 
   const itemClass = 'w-full text-left px-4 py-3 font-headline font-bold text-xs uppercase tracking-widest hover:bg-surface-container-high transition-colors flex items-center gap-3';
 
@@ -242,6 +238,12 @@ function _bindEvents(container, roomCode) {
     router.navigate('game-select', { roomCode });
   });
 
+  // Leave Lobby (shown when the night is locked)
+  container.querySelector('#btn-leave-lobby')?.addEventListener('click', () => {
+    fb.unwatchRoom();
+    router.navigate('home', {}, 'back');
+  });
+
   container.querySelector('#btn-become-host')?.addEventListener('click', async () => {
     try {
       await fb.claimHost(roomCode);
@@ -249,31 +251,6 @@ function _bindEvents(container, roomCode) {
       toast.show('Failed to claim host');
     }
   });
-
-  // Stats tracking toggle
-  const statsToggle = container.querySelector('#btn-stats-toggle');
-  if (statsToggle) {
-    statsToggle.addEventListener('click', () => {
-      const isOn = statsToggle.dataset.on === 'true';
-      const newVal = !isOn;
-      statsToggle.dataset.on = String(newVal);
-      statsToggle.setAttribute('aria-checked', String(newVal));
-      const dot = statsToggle.querySelector('div');
-      if (newVal) {
-        statsToggle.style.background = '#000';
-        statsToggle.style.borderColor = '#000';
-        dot.style.transform = 'translateX(20px)';
-        dot.style.background = '#fff';
-      } else {
-        statsToggle.style.background = '';
-        statsToggle.style.borderColor = '';
-        dot.style.transform = 'translateX(0)';
-        dot.style.background = '';
-      }
-      // Save to Firebase
-      fb.updateRoomLobby(roomCode, { trackStats: newVal });
-    });
-  }
 }
 
 async function _addPlayer(container, roomCode) {
@@ -369,14 +346,19 @@ function _startWatching(roomCode, container) {
         viewerLabelEl.style.display = 'block';
         const isGameActive = lobby.status === 'playing' && lobby.activeGameId;
         const showRecap = trackStats && hasPlayedGames;
+        const nightEnded = lobby.status === 'night-ended';
+        const spectatorSubLine = nightEnded
+          ? 'Host has ended the game night'
+          : 'Waiting for the host to start the game';
+        const spectatorSubSize = nightEnded ? 'text-sm' : 'text-base';
         viewerLabelEl.innerHTML = isGameActive
           ? `${showRecap ? `<button id="btn-spectator-recap" class="w-full bg-surface-container-lowest border border-outline py-3 font-headline font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors">
                  <span aria-hidden="true" class="material-symbols-outlined text-sm">bar_chart</span>
                  VIEW NIGHT RECAP
                </button>` : ''}`
           : `<div class="bg-surface-container-high border border-outline p-4 text-center">
-               <p class="font-mono text-[10px] uppercase tracking-widest text-outline">SPECTATOR MODE</p>
-               <p class="font-body text-sm text-on-surface-variant mt-1">Waiting for the host to start a game...</p>
+               <p class="font-headline font-bold text-lg uppercase tracking-widest text-outline">SPECTATOR MODE</p>
+               <p class="font-body ${spectatorSubSize} text-on-surface-variant mt-1">${spectatorSubLine}</p>
              </div>`;
         viewerLabelEl.querySelector('#btn-spectator-recap')?.addEventListener('click', () => {
           router.navigate('recap', { roomCode });
@@ -393,30 +375,6 @@ function _startWatching(roomCode, container) {
     if (addRow) addRow.style.display = isHost ? 'flex' : 'none';
     _renderPlayers(container, players, isHost, roomCode, isPlaying);
     _showSuggestions(container, roomCode);
-
-    // Show stats toggle only for host, before first game
-    const statsToggleSection = container.querySelector('#stats-toggle-section');
-    if (statsToggleSection) {
-      statsToggleSection.style.display = (isHost && !hasPlayedGames) ? 'block' : 'none';
-      // Sync toggle state from Firebase
-      const toggleBtn = container.querySelector('#btn-stats-toggle');
-      if (toggleBtn && toggleBtn.dataset.on !== String(trackStats)) {
-        toggleBtn.dataset.on = String(trackStats);
-        toggleBtn.setAttribute('aria-checked', String(trackStats));
-        const dot = toggleBtn.querySelector('div');
-        if (trackStats) {
-          toggleBtn.style.background = '#000';
-          toggleBtn.style.borderColor = '#000';
-          dot.style.transform = 'translateX(20px)';
-          dot.style.background = '#fff';
-        } else {
-          toggleBtn.style.background = '';
-          toggleBtn.style.borderColor = '';
-          dot.style.transform = 'translateX(0)';
-          dot.style.background = '';
-        }
-      }
-    }
 
     // The 3-dot overflow menu (Change Host, Call it a Night) is host-only.
     const lobbyMenuTrigger = document.getElementById('btn-lobby-menu-trigger');
@@ -440,10 +398,17 @@ function _startWatching(roomCode, container) {
       }
     }
 
+    // Once the night is locked, no new games can be started or replayed here —
+    // the host starts a fresh night from the landing screen. Everyone gets a
+    // Leave Lobby button instead.
+    const nightLocked = lobby.status === 'night-ended';
+    const leaveLobbySection = container.querySelector('#leave-lobby-section');
+    if (leaveLobbySection) leaveLobbySection.style.display = nightLocked ? 'block' : 'none';
+
     const startSection = container.querySelector('#start-section');
     const btn = container.querySelector('#btn-start-game');
     const hint = container.querySelector('#start-hint');
-    if (startSection) startSection.style.display = (isHost && !isPlaying) ? 'block' : 'none';
+    if (startSection) startSection.style.display = (isHost && !isPlaying && !nightLocked) ? 'block' : 'none';
     if (btn) {
       btn.disabled = activeCount < 3;
       hint.textContent = activeCount < 3 ? 'ADD AT LEAST 3 PLAYERS' : `${activeCount} PLAYERS READY`;
@@ -586,13 +551,15 @@ function _showSuggestions(container, roomCode) {
   }
 
   suggestionsEl.innerHTML = `
-    <span class="font-label text-xs uppercase tracking-widest text-outline self-center">Quick add:</span>
-    ${matches.map((n) => `
-      <button class="suggestion-chip font-label text-xs uppercase tracking-widest border border-outline pl-2 pr-1 py-1 hover:bg-surface-container-high transition-colors inline-flex items-center gap-1.5" data-name="${escapeHTML(n)}">
-        ${escapeHTML(n)}
-        <span class="remove-chip text-outline hover:text-on-surface leading-none" aria-label="Remove ${escapeHTML(n)}">&#x2715;</span>
-      </button>
-    `).join('')}
+    <span class="font-label text-xs uppercase tracking-widest text-outline shrink-0 py-1">Quick add:</span>
+    <div id="name-suggestions-chips" class="flex flex-wrap gap-2 min-w-0">
+      ${matches.map((n) => `
+        <button class="suggestion-chip font-label text-xs uppercase tracking-widest border border-outline pl-2 pr-1 py-1 hover:bg-surface-container-high transition-colors inline-flex items-center gap-1.5" data-name="${escapeHTML(n)}">
+          ${escapeHTML(n)}
+          <span class="remove-chip text-outline hover:text-on-surface leading-none" aria-label="Remove ${escapeHTML(n)}">&#x2715;</span>
+        </button>
+      `).join('')}
+    </div>
   `;
 
   suggestionsEl.querySelectorAll('.suggestion-chip').forEach((chip) => {
@@ -608,18 +575,20 @@ function _showSuggestions(container, roomCode) {
     });
   });
 
-  // Keep only the chips that fit within two rows (the label sits in row 1).
+  // Keep only the chips that fit within two rows of the chips column.
   requestAnimationFrame(() => {
-    const items = Array.from(suggestionsEl.children);
-    if (items.length === 0) return;
-    const firstTop = items[0].offsetTop;
+    const chipsEl = suggestionsEl.querySelector('#name-suggestions-chips');
+    if (!chipsEl) return;
+    const chips = Array.from(chipsEl.children);
+    if (chips.length === 0) return;
+    const firstTop = chips[0].offsetTop;
     let secondTop = null;
-    for (const it of items) {
-      if (it.offsetTop > firstTop) { secondTop = it.offsetTop; break; }
+    for (const c of chips) {
+      if (c.offsetTop > firstTop) { secondTop = c.offsetTop; break; }
     }
     const maxTop = secondTop !== null ? secondTop : firstTop;
-    items.forEach((it) => {
-      if (it.offsetTop > maxTop) it.remove();
+    chips.forEach((c) => {
+      if (c.offsetTop > maxTop) c.remove();
     });
   });
 }
