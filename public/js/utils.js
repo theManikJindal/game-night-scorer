@@ -118,16 +118,24 @@ export function confirmSaveDialog(changes) {
           <p class="font-headline font-extrabold text-xl uppercase">Save changes?</p>
         </div>
         <div class="px-5 pt-3 pb-2 max-h-48 overflow-y-auto">
-          <div style="display:grid;grid-template-columns:1fr auto auto;column-gap:2rem;row-gap:0.5rem;align-items:center;">
-            <div></div>
-            <div class="font-mono text-[10px] uppercase tracking-widest text-outline text-right">Before</div>
-            <div class="font-mono text-[10px] uppercase tracking-widest text-outline text-right">After</div>
-            ${changes.map((p) => `
-              <span class="font-headline font-bold text-sm uppercase truncate">${escapeHTML(p.name)}</span>
-              <span class="font-mono text-sm text-right">${scoreLabel(p.beforeScore, p.beforeFirstSave, p.flip7)}</span>
-              <span class="font-mono text-sm text-right">${scoreLabel(p.afterScore, p.afterFirstSave, p.flip7)}</span>
-            `).join('')}
-          </div>
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="border-b-2 border-b-primary">
+                <th class="px-3 py-2 font-mono text-lg uppercase tracking-widest text-left">Player</th>
+                <th class="px-3 py-2 font-mono text-lg uppercase tracking-widest text-right">Before</th>
+                <th class="px-3 py-2 font-mono text-lg uppercase tracking-widest text-right">After</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${changes.map((p) => `
+                <tr class="border-b border-outline-variant last:border-0">
+                  <td class="px-3 py-2 font-headline font-bold text-base uppercase truncate">${escapeHTML(p.name)}</td>
+                  <td class="px-3 py-2 font-mono font-bold text-base text-right whitespace-nowrap">${scoreLabel(p.beforeScore, p.beforeFirstSave, p.flip7)}</td>
+                  <td class="px-3 py-2 font-mono font-bold text-base text-right whitespace-nowrap">${scoreLabel(p.afterScore, p.afterFirstSave, p.flip7)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
         </div>
         <div class="px-5 pb-5 pt-3 flex gap-2">
           <button id="csd-cancel" type="button" aria-label="Cancel" class="btn-secondary flex-none flex items-center justify-center self-stretch" style="padding:0;background:#f4f4f2">
