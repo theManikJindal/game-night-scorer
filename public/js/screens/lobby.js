@@ -56,14 +56,13 @@ export function mount(container, params = {}) {
       <div id="viewer-label" class="mb-6" style="display:none"></div>
 
       <!-- Players heading (everyone) -->
-      <h2 class="font-headline font-extrabold uppercase text-lg tracking-widest mb-6">PLAYERS</h2>
+      <h2 class="font-headline font-extrabold uppercase text-lg tracking-widest mb-4">PLAYERS</h2>
 
-      <!-- Players grid: 2 columns; each player is a tile and the host gets an add tile first. -->
-      <div id="players-grid" class="grid grid-cols-2 gap-2">
-        <!-- Add Player tile (host only, first). Type a name + Enter to create the tile. -->
-        <div id="add-player-tile" class="bg-surface-container-lowest border border-outline" style="display:none">
-          <div class="h-1.5 w-full bg-primary"></div>
-          <div class="p-4">
+      <!-- Quick Add section: input tile + suggestion chips (host only) -->
+      <div id="quick-add-section" class="flex flex-wrap gap-2 mb-4" style="display:none">
+        <div id="add-player-tile" class="bg-surface-container-lowest border border-outline">
+          <div class="h-1 w-full bg-primary"></div>
+          <div class="p-2">
             <label for="input-player-name" class="sr-only">Add Player</label>
             <input
               id="input-player-name"
@@ -73,18 +72,16 @@ export function mount(container, params = {}) {
               autocomplete="off"
               autocorrect="off"
               autocapitalize="characters"
-              class="bg-transparent font-headline font-extrabold text-xl uppercase w-full border-0 p-0 focus:outline-none placeholder:text-primary focus:placeholder:text-transparent"
+              class="bg-transparent font-headline font-extrabold text-base uppercase w-full border-0 p-0 focus:outline-none placeholder:text-primary focus:placeholder:text-transparent"
             >
           </div>
         </div>
-
-        <!-- Player tiles render here (display:contents so they flow in the grid) -->
-        <div id="player-list" class="contents"></div>
+        <div id="name-suggestions-grid" class="contents"></div>
       </div>
 
-      <!-- Quick-add name chips (host only) -->
-      <div id="host-controls" class="mt-4" style="display:none">
-        <div id="name-suggestions" class="flex items-start gap-2"></div>
+      <!-- Added players (always a new row, separate from quick-add) -->
+      <div id="player-list-section" class="flex flex-wrap gap-2">
+        <div id="player-list" class="contents"></div>
       </div>
 
       <!-- Start Game (host only) -->
@@ -92,6 +89,7 @@ export function mount(container, params = {}) {
         <button id="btn-start-game" class="btn-primary flex items-center justify-center" disabled>
           Start a new game
         </button>
+        <p id="start-help-text" class="font-body text-base text-on-surface-variant mt-2 text-center" style="display:none">Add at least 3 players to start a game.</p>
       </div>
 
       <!-- Become Host (visible to all when no host) -->
@@ -253,7 +251,7 @@ function _bindEvents(container, roomCode) {
   });
 }
 
-async function _addPlayer(container, roomCode) {
+async function _addPlayer(container, roomCode, { refocus = true } = {}) {
   const input = container.querySelector('#input-player-name');
   const name = input.value.trim();
   if (!name) {
@@ -298,7 +296,7 @@ async function _addPlayer(container, roomCode) {
     const newPlayerId = await fb.addPlayer(roomCode, name, count, accentIndex);
     _savePlayerName(nameUpper);
     input.value = '';
-    input.focus();
+    if (refocus) input.focus();
     _showSuggestions(container, roomCode);
 
     if (lobby.status === 'playing' && lobby.activeGameId && newPlayerId) {
@@ -339,9 +337,8 @@ function _startWatching(roomCode, container) {
     // Show/hide host controls (add-player tile + quick-add chips). Hidden once
     // the night has ended — no more players can be added.
     const canAdd = isHost && lobby.status !== 'night-ended';
-    const addTile = container.querySelector('#add-player-tile');
-    if (addTile) addTile.style.display = canAdd ? 'block' : 'none';
-    container.querySelector('#host-controls').style.display = canAdd ? 'block' : 'none';
+    const quickAddSection = container.querySelector('#quick-add-section');
+    if (quickAddSection) quickAddSection.style.display = canAdd ? 'flex' : 'none';
     const viewerLabelEl = container.querySelector('#viewer-label');
     if (viewerLabelEl) {
       if (isHost) {
@@ -413,6 +410,8 @@ function _startWatching(roomCode, container) {
     const btn = container.querySelector('#btn-start-game');
     if (startSection) startSection.style.display = (isHost && !isPlaying && !nightLocked) ? 'block' : 'none';
     if (btn) btn.disabled = activeCount < 3;
+    const helpText = container.querySelector('#start-help-text');
+    if (helpText) helpText.style.display = (isHost && !isPlaying && !nightLocked && activeCount < 3) ? 'block' : 'none';
   });
 }
 
@@ -438,12 +437,7 @@ function _renderPlayers(container, players, isHost, roomCode, gameInProgress = f
   const list = container.querySelector('#player-list');
   const sorted = Object.values(players).sort((a, b) => a.seatOrder - b.seatOrder);
   if (sorted.length === 0) {
-    list.innerHTML = `
-      <div class="col-span-2 text-center py-12">
-        <span aria-hidden="true" class="material-symbols-outlined text-4xl text-outline mb-2">group_add</span>
-        <p class="font-body text-base text-on-surface-variant">${isHost ? 'Add at least 3 players to start a game.' : 'Waiting for the host to add players\u2026'}</p>
-      </div>
-    `;
+    list.innerHTML = isHost ? '' : `<p class="font-body text-base text-on-surface-variant w-full py-8 text-center">Waiting for the host to add players\u2026</p>`;
     return;
   }
 
@@ -453,13 +447,15 @@ function _renderPlayers(container, players, isHost, roomCode, gameInProgress = f
       const color = ACCENT_COLORS[p.accentIndex % ACCENT_COLORS.length];
       return `
         <div class="relative bg-surface-container-lowest border border-outline">
-          <div class="h-1.5 w-full" style="background:${color}"></div>
-          <div class="p-4 ${canRemove ? 'pr-9' : ''}">
-            <p class="font-headline font-extrabold text-xl uppercase truncate">${escapeHTML(p.name)}</p>
+          <div class="h-1 w-full" style="background:${color}"></div>
+          <div class="p-2">
+            <p class="font-headline font-extrabold text-base uppercase whitespace-nowrap">${escapeHTML(p.name)}</p>
           </div>
           ${canRemove ? `
-            <button class="player-remove absolute top-2.5 right-1.5 p-1 hover:bg-surface-container-high transition-colors" data-id="${escapeHTML(p.id)}" title="Remove" aria-label="Remove ${escapeHTML(p.name)}">
-              <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-error">close</span>
+            <button class="player-remove absolute rounded-full border border-black bg-white flex items-center justify-center"
+              style="top:0;right:0;transform:translate(50%,-50%);width:16px;height:16px;"
+              data-id="${escapeHTML(p.id)}" title="Remove" aria-label="Remove ${escapeHTML(p.name)}">
+              <span aria-hidden="true" class="material-symbols-outlined" style="font-size:9px;line-height:1">close</span>
             </button>
           ` : ''}
         </div>
@@ -497,58 +493,52 @@ function _removePlayerName(name) {
 }
 
 function _showSuggestions(container, roomCode) {
-  const input = container.querySelector('#input-player-name');
-  const suggestionsEl = container.querySelector('#name-suggestions');
-  if (!input || !suggestionsEl) return;
+  const suggestionsEl = container.querySelector('#name-suggestions-grid');
+  if (!suggestionsEl) return;
 
+  const lobby = state.get('roomLobby') || {};
+  if (!state.isHost() || lobby.status === 'night-ended') {
+    suggestionsEl.innerHTML = '';
+    return;
+  }
+
+  const input = container.querySelector('#input-player-name');
   const existing = new Set(Object.values(state.get('players') || {}).map((p) => p.name));
-  // Render a generous pool of candidates, then trim to whatever fits in 2 rows.
-  const matches = _getKnownNames().filter((n) => !existing.has(n)).slice(0, 30);
+  const matches = _getKnownNames().filter((n) => !existing.has(n)).slice(0, 6);
 
   if (matches.length === 0) {
     suggestionsEl.innerHTML = '';
     return;
   }
 
-  suggestionsEl.innerHTML = `
-    <span class="font-label text-xs uppercase tracking-widest shrink-0 py-1">Quick add:</span>
-    <div id="name-suggestions-chips" class="flex flex-wrap gap-2 min-w-0">
-      ${matches.map((n) => `
-        <button class="suggestion-chip font-label text-xs uppercase tracking-widest border border-outline pl-2 pr-1 py-1 hover:bg-surface-container-high transition-colors inline-flex items-center gap-1.5" data-name="${escapeHTML(n)}">
-          ${escapeHTML(n)}
-          <span class="remove-chip text-outline hover:text-on-surface leading-none" aria-label="Remove ${escapeHTML(n)}">&#x2715;</span>
-        </button>
-      `).join('')}
+  suggestionsEl.innerHTML = matches.map((n) => `
+    <div class="relative">
+      <button class="suggestion-chip bg-surface-container-lowest border border-outline text-left hover:bg-surface-container-high transition-colors" data-name="${escapeHTML(n)}" aria-label="Add ${escapeHTML(n)}">
+        <div class="h-1 w-full bg-outline-variant"></div>
+        <div class="p-2">
+          <span class="block font-headline font-extrabold text-base uppercase whitespace-nowrap">${escapeHTML(n)}</span>
+        </div>
+      </button>
+      <button class="suggestion-remove absolute rounded-full border border-gray-400 bg-white flex items-center justify-center"
+        style="top:0;right:0;transform:translate(50%,-50%);width:16px;height:16px;"
+        data-name="${escapeHTML(n)}" aria-label="Remove ${escapeHTML(n)} from suggestions">
+        <span class="material-symbols-outlined text-gray-400" style="font-size:9px;line-height:1">close</span>
+      </button>
     </div>
-  `;
+  `).join('');
 
   suggestionsEl.querySelectorAll('.suggestion-chip').forEach((chip) => {
-    chip.addEventListener('click', (e) => {
-      if (e.target.closest('.remove-chip')) return;
-      input.value = chip.dataset.name;
-      _addPlayer(container, roomCode);
-    });
-    chip.querySelector('.remove-chip')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      _removePlayerName(chip.dataset.name);
-      _showSuggestions(container, roomCode);
+    chip.addEventListener('click', () => {
+      if (input) input.value = chip.dataset.name;
+      _addPlayer(container, roomCode, { refocus: false });
     });
   });
 
-  // Keep only the chips that fit within two rows of the chips column.
-  requestAnimationFrame(() => {
-    const chipsEl = suggestionsEl.querySelector('#name-suggestions-chips');
-    if (!chipsEl) return;
-    const chips = Array.from(chipsEl.children);
-    if (chips.length === 0) return;
-    const firstTop = chips[0].offsetTop;
-    let secondTop = null;
-    for (const c of chips) {
-      if (c.offsetTop > firstTop) { secondTop = c.offsetTop; break; }
-    }
-    const maxTop = secondTop !== null ? secondTop : firstTop;
-    chips.forEach((c) => {
-      if (c.offsetTop > maxTop) c.remove();
+  suggestionsEl.querySelectorAll('.suggestion-remove').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _removePlayerName(btn.dataset.name);
+      _showSuggestions(container, roomCode);
     });
   });
 }
