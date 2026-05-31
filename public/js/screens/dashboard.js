@@ -469,7 +469,7 @@ function _render(container, roomCode) {
     if (isFlip7Host) {
       const roundDropdownItems = roundKeys.map((key, i) => `
         <button type="button" data-round-key="${key}"
-          style="display:block;width:100%;text-align:left;padding:10px 16px;font-family:monospace;font-size:16px;text-transform:uppercase;letter-spacing:0.05em;color:#000;background:${key === _editLastRoundKey ? '#f0f0f0' : '#fff'};border:none;${i < roundKeys.length - 1 ? 'border-bottom:1px solid #c6c6c6;' : ''}cursor:pointer;white-space:nowrap"
+          style="display:block;width:100%;text-align:left;padding:10px 16px;font-family:monospace;font-size:16px;text-transform:uppercase;letter-spacing:0.05em;color:#000;background:${key === _editLastRoundKey ? '#e8e8e6' : '#f4f4f2'};border:none;${i < roundKeys.length - 1 ? 'border-bottom:1px solid #c6c6c6;' : ''}cursor:pointer;white-space:nowrap"
           class="round-dropdown-item">
           Round ${i + 1}
         </button>
@@ -493,7 +493,7 @@ function _render(container, roomCode) {
                 style="width:3.25rem;height:100%;" ${rounds.length === 0 ? 'disabled' : ''}>
                 <span class="material-symbols-outlined text-lg" aria-hidden="true">edit</span>
               </button>
-              <div id="round-dropdown" style="display:none;position:absolute;bottom:100%;left:0;margin-bottom:4px;background:#fff;border:1px solid #000;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,0.15)">
+              <div id="round-dropdown" style="display:none;position:absolute;bottom:100%;left:0;margin-bottom:4px;background:#f4f4f2;border:1px solid #000;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,0.15)">
                 ${roundDropdownItems}
               </div>
             </div>
