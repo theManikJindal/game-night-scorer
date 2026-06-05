@@ -2,7 +2,7 @@
 // Cabo Game Module
 // ═══════════════════════════════════════════
 
-import { ACCENT_COLORS } from '../state.js';
+import { accentColor } from '../state.js';
 import { escapeHTML } from '../utils.js';
 
 const minCardCache = new WeakMap();
@@ -168,7 +168,7 @@ export default {
         <div class="flex flex-wrap gap-2">
           ${playerIds.map((pid) => {
             const p = snapshot[pid] || {};
-            const color = ACCENT_COLORS[p.accentIndex || 0];
+            const color = accentColor(p.accentIndex);
             return `
               <button
                 data-caller="${escapeHTML(pid)}"
@@ -194,7 +194,7 @@ export default {
       <div class="flex flex-col gap-2" id="card-totals-section">
         ${playerIds.map((pid) => {
           const p = snapshot[pid] || {};
-          const color = ACCENT_COLORS[p.accentIndex || 0];
+          const color = accentColor(p.accentIndex);
           const currentTotal = totals[pid] || 0;
           return `
             <div class="bg-surface-container-lowest border border-outline">

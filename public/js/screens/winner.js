@@ -6,7 +6,7 @@ import * as state from '../state.js';
 import * as router from '../router.js';
 import * as bottomNav from '../components/bottom-nav.js';
 import { getGame } from '../games/registry.js';
-import { ACCENT_COLORS } from '../state.js';
+import { accentColor } from '../state.js';
 import { escapeHTML } from '../utils.js';
 
 export function mount(container, params = {}) {
@@ -47,7 +47,7 @@ export function mount(container, params = {}) {
   const standings = gameModule.deriveStandings(totals, game.playerIds);
   const winner = snapshot[game.winner] || {};
   const winnerTotal = totals[game.winner] || 0;
-  const winnerColor = ACCENT_COLORS[winner.accentIndex || 0];
+  const winnerColor = accentColor(winner.accentIndex);
 
   container.innerHTML = `
     <div class="h-full flex flex-col bg-primary text-on-primary">

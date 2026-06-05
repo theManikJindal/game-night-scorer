@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════
 
 import * as state from '../state.js';
-import { ACCENT_COLORS } from '../state.js';
+import { accentColor } from '../state.js';
 import * as fb from '../firebase.js';
 import * as router from '../router.js';
 import * as bottomNav from '../components/bottom-nav.js';
@@ -76,14 +76,10 @@ export function mount(container, params = {}) {
     return;
   }
 
-  // Top bar
+  // Top bar — no back button; navigation is via the bottom nav and overflow menu.
   const topBar = document.getElementById('top-bar');
   topBar.style.display = 'flex';
-  const backBtn = document.getElementById('top-bar-back');
-  backBtn.classList.remove('hidden');
-  backBtn.textContent = 'arrow_back';
-  backBtn.setAttribute('aria-label', 'Go back');
-  backBtn.onclick = () => router.navigate('lobby', { roomCode });
+  document.getElementById('top-bar-back').classList.add('hidden');
 
   // Bottom nav
   bottomNav.show('dashboard');
@@ -563,6 +559,8 @@ function _render(container, roomCode) {
             _editFirstSavePid = undefined;
             _editScoresMode = true;
             _render(container, roomCode);
+            // Surface the now-active edit mode by scrolling the board to the top.
+            container.scrollTo({ top: 0, behavior: 'smooth' });
           });
         });
       }
@@ -693,7 +691,7 @@ function _render(container, roomCode) {
 
 function _renderFlip7HostRow(standing, playerData, roundHistory, editingRoundIndex = -1, roundFlip7 = [], roundJuaSave = [], isLiveFirstSave = false, fineCount = 0) {
   const { playerId: pid, total, rank } = standing;
-  const color = ACCENT_COLORS[playerData.accentIndex || 0];
+  const color = accentColor(playerData.accentIndex);
   const name = escapeHTML(playerData.name || pid);
   const rankLabel = rank <= 3 ? ['1ST', '2ND', '3RD'][rank - 1] : `${rank}TH`;
   const bgClass = 'bg-surface-container-lowest';
@@ -951,7 +949,7 @@ function _openFlip7Drawer(container, roomCode, playerId, snapshot, game) {
   }
 
   const p = snapshot[playerId] || {};
-  const color = ACCENT_COLORS[p.accentIndex || 0];
+  const color = accentColor(p.accentIndex);
   const name = escapeHTML(p.name || playerId);
   const total = (game.totals || {})[playerId] || 0;
 
@@ -1422,7 +1420,7 @@ function _openAdjustDrawer(container, roomCode, game, pid, snapshot) {
   const initialAmount = Math.abs(delta);
 
   const p = snapshot[pid] || {};
-  const color = ACCENT_COLORS[p.accentIndex || 0];
+  const color = accentColor(p.accentIndex);
   const name = escapeHTML(p.name || pid);
 
   // For first save display: use pending change if set, otherwise read from round data
