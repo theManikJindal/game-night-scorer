@@ -39,7 +39,7 @@ export function mount(container, params = {}) {
   _renderTopBarActions(roomCode);
 
   container.innerHTML = `
-    <div class="p-6 pb-32">
+    <div class="p-6 pb-8 flex flex-col min-h-full">
 
       <!-- Leave Lobby (top, once the night is locked — host + spectators) -->
       <div id="leave-lobby-section" class="mb-6" style="display:none">
@@ -77,14 +77,19 @@ export function mount(container, params = {}) {
         <div id="name-suggestions" class="mb-4 flex items-start gap-2"></div>
       </div>
 
-      <!-- Players heading (everyone) -->
-      <h2 class="font-headline font-extrabold uppercase text-lg tracking-widest mb-6">PLAYERS</h2>
+      <!-- Players heading (everyone); shows "N PLAYERS" once there's at least one. -->
+      <h2 id="players-heading" class="font-headline font-extrabold uppercase text-lg tracking-widest mt-4 mb-6">PLAYERS</h2>
 
       <!-- Player List: 2-column grid of player tiles -->
       <div id="player-list" class="grid grid-cols-2 gap-2"></div>
 
+      <!-- Spacer: pushes the bottom actions down so the grid has room to breathe;
+           collapses when there are enough players to scroll. -->
+      <div class="flex-1 min-h-8"></div>
+
       <!-- Start Game (host only) -->
       <div id="start-section" class="mt-4" style="display:none">
+        <p id="start-hint" class="font-body text-sm text-on-surface-variant text-center mb-2" style="display:none">Add at least 3 players to start a game.</p>
         <button id="btn-start-game" class="btn-primary flex items-center justify-center" disabled>
           Start a new game
         </button>
@@ -410,6 +415,14 @@ function _startWatching(roomCode, container) {
     const btn = container.querySelector('#btn-start-game');
     if (startSection) startSection.style.display = (isHost && !isPlaying && !nightLocked) ? 'block' : 'none';
     if (btn) btn.disabled = activeCount < 3;
+    // Keep the "add at least 3 players" hint visible until the threshold is met.
+    // At 0 players the empty-state placeholder already shows it, so only fill the
+    // gap for 1-2 players here.
+    const startHint = container.querySelector('#start-hint');
+    if (startHint) {
+      const showHint = isHost && !isPlaying && !nightLocked && activeCount > 0 && activeCount < 3;
+      startHint.style.display = showHint ? 'block' : 'none';
+    }
   });
 }
 
@@ -434,6 +447,10 @@ function _renderFinishedGameActions(el, roomCode) {
 function _renderPlayers(container, players, isHost, roomCode, gameInProgress = false) {
   const list = container.querySelector('#player-list');
   const sorted = Object.values(players).sort((a, b) => a.seatOrder - b.seatOrder);
+
+  // Heading reflects the count: "PLAYERS" when empty, "N PLAYERS" otherwise.
+  const heading = container.querySelector('#players-heading');
+  if (heading) heading.textContent = sorted.length > 0 ? `${sorted.length} Players` : 'Players';
   if (sorted.length === 0) {
     list.innerHTML = `
       <div class="col-span-2 text-center py-12">
