@@ -80,8 +80,8 @@ export function mount(container, params = {}) {
       <!-- Players heading (everyone) -->
       <h2 class="font-headline font-extrabold uppercase text-lg tracking-widest mb-6">PLAYERS</h2>
 
-      <!-- Player List -->
-      <div id="player-list" class="flex flex-col gap-1"></div>
+      <!-- Player List: 2-column grid of player tiles -->
+      <div id="player-list" class="grid grid-cols-2 gap-2"></div>
 
       <!-- Start Game (host only) -->
       <div id="start-section" class="mt-4" style="display:none">
@@ -437,7 +437,7 @@ function _renderPlayers(container, players, isHost, roomCode, gameInProgress = f
   const sorted = Object.values(players).sort((a, b) => a.seatOrder - b.seatOrder);
   if (sorted.length === 0) {
     list.innerHTML = `
-      <div class="text-center py-12">
+      <div class="col-span-2 text-center py-12">
         <span aria-hidden="true" class="material-symbols-outlined text-4xl text-outline mb-2">group_add</span>
         <p class="font-body text-base text-on-surface-variant">${isHost ? 'Add at least 3 players to start a game.' : 'Waiting for the host to add players\u2026'}</p>
       </div>
@@ -445,22 +445,21 @@ function _renderPlayers(container, players, isHost, roomCode, gameInProgress = f
     return;
   }
 
+  const canRemove = isHost && !gameInProgress;
   list.innerHTML = sorted
     .map((p) => {
       const color = ACCENT_COLORS[p.accentIndex % ACCENT_COLORS.length];
       return `
-        <div class="bg-surface-container-lowest border border-outline flex items-center">
-          <div class="w-1.5 self-stretch" style="background:${color}"></div>
-          <div class="flex-1 p-4 flex items-center gap-3">
-            <div class="flex-1 min-w-0">
-              <p class="font-headline font-extrabold text-xl uppercase truncate">${escapeHTML(p.name)}</p>
-            </div>
-            ${(isHost && !gameInProgress) ? `
-              <button class="player-remove p-1.5 hover:bg-surface-container-high transition-colors" data-id="${escapeHTML(p.id)}" title="Remove" aria-label="Remove ${escapeHTML(p.name)}">
-                <span aria-hidden="true" class="material-symbols-outlined text-[21px] text-error">close</span>
-              </button>
-            ` : ''}
+        <div class="relative bg-surface-container-lowest border border-outline">
+          <div class="h-1.5 w-full" style="background:${color}"></div>
+          <div class="p-4 ${canRemove ? 'pr-9' : ''}">
+            <p class="font-headline font-extrabold text-xl uppercase truncate">${escapeHTML(p.name)}</p>
           </div>
+          ${canRemove ? `
+            <button class="player-remove absolute top-2.5 right-1.5 p-1 hover:bg-surface-container-high transition-colors" data-id="${escapeHTML(p.id)}" title="Remove" aria-label="Remove ${escapeHTML(p.name)}">
+              <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-error">close</span>
+            </button>
+          ` : ''}
         </div>
       `;
     })
