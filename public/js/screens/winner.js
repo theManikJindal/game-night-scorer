@@ -138,11 +138,14 @@ export function mount(container, params = {}) {
               const savesCount = savesCounts[s.playerId] || 0;
               const finesCount = (game.juaFines || {})[s.playerId] || 0;
 
-              // Saves/Fines cell shown in the scores table (JUA only).
-              const sfParts = [];
-              if (savesCount > 0) sfParts.push(`Save: ${savesCount}`);
-              if (finesCount > 0) sfParts.push(`Fines: ${finesCount}`);
-              const sfText = juaOn && sfParts.length > 0 ? sfParts.join(', ') : '—';
+              // Saves/Fines chips shown in the scores table (JUA only) — mirror the
+              // fine chip on the dashboard: a heart save chip and a 👎 fine chip,
+              // each rendered only when the player has a non-zero count.
+              const chipCls = 'inline-block font-mono text-sm bg-surface-container-low border border-outline-variant px-1.5 py-0.5 text-on-surface';
+              const sfChips = [];
+              if (juaOn && savesCount > 0) sfChips.push(`<span class="${chipCls}">❤️ ${savesCount}</span>`);
+              if (juaOn && finesCount > 0) sfChips.push(`<span class="${chipCls}">👎 ${finesCount}</span>`);
+              const sfText = sfChips.length > 0 ? `<div class="flex gap-1 justify-center">${sfChips.join('')}</div>` : '';
 
               // Winnings math shown in winnings view
               let formulaStr = '';
@@ -169,23 +172,19 @@ export function mount(container, params = {}) {
 
               const scoreTr = `
                 <tr>
-                  <td class="py-2 pr-3 text-center font-headline text-lg font-bold">${s.rank}</td>
-                  <td class="py-2 pr-3 font-headline text-lg font-bold uppercase leading-tight">${escapeHTML(p.name || s.playerId)}</td>
-                  ${showSavesFines ? `<td class="py-2 px-3 text-center font-mono text-lg opacity-70 whitespace-nowrap">${sfText}</td>` : ''}
-                  <td class="py-2 pl-3 text-right font-mono text-lg">${s.total}</td>
+                  <td class="py-3 pl-4 pr-3 text-center font-mono font-bold text-lg">${s.rank}</td>
+                  <td class="py-3 pr-3 font-headline font-bold text-lg uppercase leading-tight">${escapeHTML(p.name || s.playerId)}</td>
+                  ${showSavesFines ? `<td class="py-3 px-3 font-bold whitespace-nowrap">${sfText}</td>` : ''}
+                  <td class="py-3 pl-3 pr-4 text-right font-mono font-bold text-lg">${s.total}</td>
                 </tr>`;
 
               const winningsRow = juaOn ? `
-                <div class="flex justify-between items-start gap-3 py-2">
-                  <div class="flex items-start gap-3 min-w-0">
-                    <span class="font-mono text-sm opacity-50 w-6 shrink-0 text-center">${s.rank}</span>
-                    <div class="min-w-0">
-                      <p class="font-headline font-bold text-lg uppercase leading-tight">${escapeHTML(p.name || s.playerId)}</p>
-                      ${formulaStr ? `<p class="font-mono text-xs opacity-70 leading-relaxed mt-1">${formulaStr}</p>` : ''}
-                    </div>
-                  </div>
-                  <p class="font-headline font-bold text-lg shrink-0">${amountStr}</p>
-                </div>` : '';
+                <tr>
+                  <td class="py-3 pl-4 pr-3 text-center font-mono font-bold text-lg">${s.rank}</td>
+                  <td class="py-3 pr-3 font-headline font-bold text-lg uppercase leading-tight">${escapeHTML(p.name || s.playerId)}</td>
+                  <td class="py-3 px-3 font-mono font-bold text-sm opacity-70 leading-relaxed">${formulaStr || '—'}</td>
+                  <td class="py-3 pl-3 pr-4 text-right font-mono font-bold text-lg whitespace-nowrap">${amountStr}</td>
+                </tr>` : '';
 
               return { scoreTr, winningsRow };
             });
@@ -230,22 +229,22 @@ export function mount(container, params = {}) {
               const tieRows = [posRow(1, n1), posRow(2, n2), posRow(3, n3)].filter((row) => row.count > 0);
               tieHtml = `
                 <div id="tie-card" style="display:none" class="mt-4 mb-6 bg-surface-container-lowest border border-outline text-on-surface p-4">
-                  <table class="w-full font-mono text-xs border-collapse">
+                  <table class="w-full text-sm border-collapse">
                     <thead>
                       <tr class="border-b border-outline">
-                        <th class="text-left pb-2 font-bold uppercase tracking-widest">#</th>
-                        <th class="text-left pb-2 font-bold uppercase tracking-widest px-2">Winnings</th>
-                        <th class="text-center pb-2 font-bold uppercase tracking-widest px-2">Players</th>
-                        <th class="text-right pb-2 font-bold uppercase tracking-widest">Each</th>
+                        <th class="text-left pb-2 font-headline uppercase tracking-widest">#</th>
+                        <th class="text-left pb-2 font-headline uppercase tracking-widest px-2">Winnings</th>
+                        <th class="text-center pb-2 font-headline uppercase tracking-widest px-2">Players</th>
+                        <th class="text-right pb-2 font-headline uppercase tracking-widest">Each</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="font-mono">
                       ${tieRows.map((row) => `
                         <tr class="border-b border-outline-variant last:border-0">
                           <td class="py-1.5 pr-2">${escapeHTML(row.label)}</td>
                           <td class="py-1.5 px-2">${escapeHTML(row.math)}</td>
                           <td class="py-1.5 px-2 text-center">${row.count}</td>
-                          <td class="py-1.5 text-right font-bold">${row.each !== null ? `₹${row.each}` : '—'}</td>
+                          <td class="py-1.5 text-right">${row.each !== null ? `₹${row.each}` : '—'}</td>
                         </tr>
                       `).join('')}
                     </tbody>
@@ -254,21 +253,23 @@ export function mount(container, params = {}) {
               `;
             }
 
-            const headCls = 'py-2 font-mono text-xs uppercase tracking-widest text-outline';
+            const headCls = 'py-3 font-headline font-bold text-sm uppercase tracking-widest text-outline';
             const scoresTable = `
-              <table id="scores-view" class="w-full border-collapse">
+              <table id="scores-view" class="w-full border-collapse bg-white">
                 <thead>
                   <tr class="border-b border-outline">
-                    <th class="${headCls} pr-3 text-center">Rank</th>
+                    <th class="${headCls} pl-4 pr-3 text-center">Rank</th>
                     <th class="${headCls} pr-3 text-left">Player</th>
-                    ${showSavesFines ? `<th class="${headCls} px-3 text-center">Saves/Fines</th>` : ''}
-                    <th class="${headCls} pl-3 text-right">Score</th>
+                    ${showSavesFines ? `<th class="${headCls} px-3"></th>` : ''}
+                    <th class="${headCls} pl-3 pr-4 text-right">Score</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-outline-variant">${scoreTrs}</tbody>
               </table>`;
             const winningsView = juaOn
-              ? `<div id="winnings-view" class="divide-y divide-outline-variant" style="display:none">${winningsRows}</div>`
+              ? `<table id="winnings-view" class="w-full border-collapse bg-white" style="display:none">
+                <tbody class="divide-y divide-outline-variant">${winningsRows}</tbody>
+              </table>`
               : '';
             return scoresTable + winningsView + tieHtml;
           })()}
@@ -280,8 +281,8 @@ export function mount(container, params = {}) {
       <!-- Docked view switcher: Scores / Winnings (sits flush above the bottom nav) -->
       <div class="docked-bar p-4 bg-surface-container-low">
         <div role="tablist" aria-label="View" class="flex border border-outline">
-          <button id="seg-scores" role="tab" class="flex-1 py-2.5 font-headline font-extrabold uppercase tracking-widest text-sm transition-colors">Scores</button>
-          <button id="seg-winnings" role="tab" class="flex-1 py-2.5 font-headline font-extrabold uppercase tracking-widest text-sm transition-colors">Winnings</button>
+          <button id="seg-scores" role="tab" class="flex-1 py-2.5 font-headline uppercase tracking-widest text-sm transition-colors">Scores</button>
+          <button id="seg-winnings" role="tab" class="flex-1 py-2.5 font-headline uppercase tracking-widest text-sm transition-colors">Winnings</button>
         </div>
       </div>
       ` : ''}
@@ -294,8 +295,8 @@ export function mount(container, params = {}) {
   const _applyView = (showWinnings) => {
     if (segScores && segWinnings) {
       const active = 'bg-primary text-on-primary';
-      segScores.className = `flex-1 py-2.5 font-headline font-extrabold uppercase tracking-widest text-sm transition-colors ${showWinnings ? '' : active}`;
-      segWinnings.className = `flex-1 py-2.5 font-headline font-extrabold uppercase tracking-widest text-sm transition-colors ${showWinnings ? active : ''}`;
+      segScores.className = `flex-1 py-2.5 font-headline uppercase tracking-widest text-sm transition-colors ${showWinnings ? '' : active}`;
+      segWinnings.className = `flex-1 py-2.5 font-headline uppercase tracking-widest text-sm transition-colors ${showWinnings ? active : ''}`;
       segScores.setAttribute('aria-selected', String(!showWinnings));
       segWinnings.setAttribute('aria-selected', String(showWinnings));
     }
