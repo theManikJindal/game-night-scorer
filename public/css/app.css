@@ -23,7 +23,7 @@ body {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   height: 100%;
-  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0));
+  padding-bottom: calc(var(--nav-height, 80px) + env(safe-area-inset-bottom, 0));
 }
 
 .screen.no-nav {
@@ -31,6 +31,24 @@ body {
 }
 .screen.active {
   display: block;
+}
+
+/* ── Docked action bar ──
+   Pinned to the bottom of the app column, sitting flush above the bottom nav.
+   When the nav is hidden (.screen.no-nav) it drops to the very bottom. */
+.docked-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  max-width: 430px;
+  margin-left: auto;
+  margin-right: auto;
+  bottom: calc(var(--nav-height, 80px) + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  border-top: 1px solid #c6c6c6;
+}
+.screen.no-nav .docked-bar {
+  bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ── Bottom Nav ── */
@@ -54,8 +72,6 @@ body {
 
 .nav-item.active {
   color: #1a1c1b;
-  border-top: 4px solid #1a1c1b;
-  padding-top: 8px;
 }
 
 .nav-item span:last-child {
@@ -294,8 +310,4 @@ button.nav-item {
 button.nav-item:focus-visible {
   outline: 2px solid #0046fa;
   outline-offset: -2px;
-}
-
-button.nav-item.active {
-  border-top: 4px solid #1a1c1b;
 }
