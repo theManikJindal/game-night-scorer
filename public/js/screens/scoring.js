@@ -9,7 +9,7 @@ import * as toast from '../components/toast.js';
 import * as bottomNav from '../components/bottom-nav.js';
 import * as hostMenu from '../components/host-menu.js';
 import { getGame } from '../games/registry.js';
-import { ACCENT_COLORS } from '../state.js';
+import { accentColor } from '../state.js';
 import { escapeHTML, confirmRoundDialog } from '../utils.js';
 
 export function mount(container, params = {}) {
@@ -106,7 +106,7 @@ function _render(container, roomCode) {
         <div class="divide-y divide-outline-variant">
           ${standings.map((s) => {
             const p = snapshot[s.playerId] || {};
-            const color = ACCENT_COLORS[p.accentIndex || 0];
+            const color = accentColor(p.accentIndex);
             const rankLabel = s.rank <= 3 ? ['1ST', '2ND', '3RD'][s.rank - 1] : s.rank + 'TH';
             return `
               <div class="flex items-center px-4 py-2 gap-3">

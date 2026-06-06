@@ -5,8 +5,9 @@
 import * as state from '../state.js';
 import * as router from '../router.js';
 import * as bottomNav from '../components/bottom-nav.js';
+import * as hostMenu from '../components/host-menu.js';
 import { getGame } from '../games/registry.js';
-import { ACCENT_COLORS } from '../state.js';
+import { accentColor } from '../state.js';
 import { escapeHTML } from '../utils.js';
 
 export function mount(container, params = {}) {
@@ -29,13 +30,12 @@ export function mount(container, params = {}) {
   // it stays reachable (and navigable) after a game finishes.
   const topBar = document.getElementById('top-bar');
   topBar.style.display = 'flex';
-  document.getElementById('top-bar-title').textContent = 'WINNER';
+  document.getElementById('top-bar-title').textContent = 'Flip 7';
+  // No back button — winner is a bottom-nav tab, navigable like the other tabs.
   const backBtn = document.getElementById('top-bar-back');
-  backBtn.classList.remove('hidden');
-  backBtn.textContent = 'arrow_back';
-  backBtn.setAttribute('aria-label', 'Go back');
-  backBtn.onclick = () => router.navigate('lobby', { roomCode });
-  document.getElementById('top-bar-actions').innerHTML = '';
+  backBtn.classList.add('hidden');
+  backBtn.onclick = null;
+  hostMenu.renderTopBarActions(roomCode);
   bottomNav.show('winner');
 
   const gameModule = getGame(game.type);
@@ -47,12 +47,12 @@ export function mount(container, params = {}) {
   const standings = gameModule.deriveStandings(totals, game.playerIds);
   const winner = snapshot[game.winner] || {};
   const winnerTotal = totals[game.winner] || 0;
-  const winnerColor = ACCENT_COLORS[winner.accentIndex || 0];
+  const winnerColor = accentColor(winner.accentIndex);
 
   container.innerHTML = `
     <div class="h-full flex flex-col bg-primary text-on-primary">
       <!-- Hero -->
-      <main class="flex-1 flex flex-col items-center overflow-y-auto min-h-0 px-6 pt-6 pb-8">
+      <main class="flex-1 flex flex-col items-center overflow-y-auto min-h-0 px-6 pt-6 ${juaOn ? 'pb-28' : 'pb-8'}">
         <div id="hero-section" class="text-center w-full max-w-sm mx-auto mb-12">
           <div class="flex items-center justify-center gap-2 mb-4">
             <span aria-hidden="true" class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
@@ -260,20 +260,29 @@ export function mount(container, params = {}) {
 
       </main>
 
-      <!-- Actions (jua winnings toggle; Lobby/Recap live in the bottom nav) -->
       ${juaOn ? `
-      <footer class="p-6 shrink-0">
-        <button id="btn-toggle-view" class="w-full py-4 bg-white text-primary font-headline font-extrabold uppercase tracking-widest text-base transition-opacity hover:opacity-90">
-          VIEW WINNINGS
-        </button>
-      </footer>
+      <!-- Docked view switcher: Scores / Winnings (sits flush above the bottom nav) -->
+      <div class="docked-bar p-4 bg-primary">
+        <div role="tablist" aria-label="View" class="flex border border-white/40">
+          <button id="seg-scores" role="tab" class="flex-1 py-2.5 font-headline font-extrabold uppercase tracking-widest text-sm transition-colors">Scores</button>
+          <button id="seg-winnings" role="tab" class="flex-1 py-2.5 font-headline font-extrabold uppercase tracking-widest text-sm transition-colors">Winnings</button>
+        </div>
+      </div>
       ` : ''}
     </div>
   `;
 
+  const segScores = container.querySelector('#seg-scores');
+  const segWinnings = container.querySelector('#seg-winnings');
+
   const _applyView = (showWinnings) => {
-    const btn = container.querySelector('#btn-toggle-view');
-    if (btn) btn.textContent = showWinnings ? 'VIEW SCORES' : 'VIEW WINNINGS';
+    if (segScores && segWinnings) {
+      const active = 'bg-white text-primary';
+      segScores.className = `flex-1 py-2.5 font-headline font-extrabold uppercase tracking-widest text-sm transition-colors ${showWinnings ? '' : active}`;
+      segWinnings.className = `flex-1 py-2.5 font-headline font-extrabold uppercase tracking-widest text-sm transition-colors ${showWinnings ? active : ''}`;
+      segScores.setAttribute('aria-selected', String(!showWinnings));
+      segWinnings.setAttribute('aria-selected', String(showWinnings));
+    }
     const hero = container.querySelector('#hero-section');
     if (hero) hero.style.display = showWinnings ? 'none' : '';
     container.querySelectorAll('.score-row').forEach((el) => {
@@ -286,14 +295,26 @@ export function mount(container, params = {}) {
     if (tieCard) tieCard.style.display = showWinnings ? 'block' : 'none';
   };
 
-  let showWinnings = juaOn && localStorage.getItem('gns_winner_view') === 'winnings';
+  // The Scores/Winnings choice is remembered per game, so it survives tab
+  // navigation but resets to Scores once a new game ends (the activeGameId
+  // changes). Older string-only values fail the parse and fall back to Scores.
+  const activeGameId = state.get('roomLobby')?.activeGameId || null;
+  let stored = null;
+  try { stored = JSON.parse(localStorage.getItem('gns_winner_view')); } catch { /* legacy/invalid */ }
+
+  let showWinnings = juaOn && stored?.gameId === activeGameId && stored?.view === 'winnings';
   _applyView(showWinnings);
 
-  container.querySelector('#btn-toggle-view')?.addEventListener('click', () => {
-    showWinnings = !showWinnings;
-    localStorage.setItem('gns_winner_view', showWinnings ? 'winnings' : 'scores');
+  const _setView = (next) => {
+    showWinnings = next;
+    localStorage.setItem('gns_winner_view', JSON.stringify({
+      gameId: activeGameId,
+      view: showWinnings ? 'winnings' : 'scores',
+    }));
     _applyView(showWinnings);
-  });
+  };
+  segScores?.addEventListener('click', () => _setView(false));
+  segWinnings?.addEventListener('click', () => _setView(true));
 }
 
 export function unmount() {}

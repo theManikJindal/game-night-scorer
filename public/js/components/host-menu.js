@@ -32,35 +32,83 @@ export function init() {
     }
   });
 
-  // Bind menu actions
-  overlay.querySelectorAll('.host-menu-action').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      hide();
-      const action = btn.dataset.action;
-      const roomCode = state.get('roomCode');
+  // Delegate menu actions — items are re-rendered on each open (see _renderMenuItems).
+  const itemsEl = document.getElementById('host-menu-items');
+  itemsEl?.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.host-menu-action');
+    if (!btn) return;
+    hide();
+    const action = btn.dataset.action;
+    const roomCode = state.get('roomCode');
 
-      if (action === 'new-game') {
-        // Keep the current game referenced until a new one is actually created
-        // (createGame overwrites activeGameId/status), so backing out of game
-        // select returns to the current game rather than orphaning it.
-        router.navigate('game-select', { roomCode });
-      } else if (action === 'lobby') {
-        router.navigate('lobby', { roomCode });
-      } else if (action === 'end-game') {
-        await _endGameWithWinner(roomCode);
-        router.navigate('lobby', { roomCode });
-      } else if (action === 'home') {
-        // Mid-game leave deserves a stronger warning since it strands other clients.
-        const lobby = state.get('roomLobby') || {};
-        const midGame = lobby.status === 'playing' && lobby.activeGameId;
-        const message = midGame
-          ? "You're mid-game. Leaving means the game can't continue from this device. Proceed?"
-          : 'Leave this room?';
-        if (!window.confirm(message)) return;
-        _leaveRoom(roomCode);
+    if (action === 'end-game') {
+      await _endGameWithWinner(roomCode);
+      router.navigate('lobby', { roomCode });
+    } else if (action === 'change-host') {
+      try {
+        await fb.releaseHost(roomCode);
+      } catch {
+        toast.show('Failed to release host');
       }
-    });
+    } else if (action === 'call-night') {
+      await _callItANight(roomCode);
+    } else if (action === 'exit-lobby') {
+      // Mid-game leave deserves a stronger warning since it strands other clients.
+      const lobby = state.get('roomLobby') || {};
+      const midGame = lobby.status === 'playing' && lobby.activeGameId;
+      const message = midGame
+        ? "You're mid-game. Leaving means the game can't continue from this device. Proceed?"
+        : 'Leave this room?';
+      if (!window.confirm(message)) return;
+      _leaveRoom(roomCode);
+    }
   });
+}
+
+// Build the overflow menu items. Shared across the Lobby, Game, and Recap tabs so
+// the host sees the same menu everywhere. All items use the negative (error) variant.
+// "End Game" only shows while a game is actually in progress; "Call it a Night" only
+// once stats are tracked and a game has finished (and the night isn't already locked).
+function _renderMenuItems() {
+  const itemsEl = document.getElementById('host-menu-items');
+  if (!itemsEl) return;
+
+  const lobby = state.get('roomLobby') || {};
+  const games = state.get('games') || {};
+  const gameActive = lobby.status === 'playing' && state.currentGame()?.status === 'active';
+  const trackStats = lobby.trackStats !== false;
+  const hasFinishedGame = Object.values(games).some((g) => g.status === 'finished');
+  // "Call it a Night" can't co-exist with "End Game" — finish the active game first.
+  const canCallNight = trackStats && hasFinishedGame && lobby.status !== 'night-ended' && !gameActive;
+
+  const items = [];
+  if (gameActive) items.push({ action: 'end-game', icon: 'stop_circle', label: 'End Game' });
+  items.push({ action: 'change-host', icon: 'swap_horiz', label: 'Change Host' });
+  if (canCallNight) items.push({ action: 'call-night', icon: 'bedtime', label: 'Call it a Night' });
+  items.push({ action: 'exit-lobby', icon: 'logout', label: 'Exit Lobby' });
+
+  const base = 'host-menu-action w-full text-left px-4 py-3 font-headline font-bold text-xs uppercase tracking-widest text-error hover:bg-surface-container-high transition-colors flex items-center gap-3';
+  itemsEl.innerHTML = items.map((it, i) => `
+    <button class="${base}${i < items.length - 1 ? ' border-b border-outline-variant' : ''}" data-action="${it.action}">
+      <span aria-hidden="true" class="material-symbols-outlined text-sm">${it.icon}</span>
+      ${it.label.toUpperCase()}
+    </button>
+  `).join('');
+}
+
+async function _callItANight(roomCode) {
+  if (!state.isHost()) {
+    toast.show('Only the host can do that');
+    return;
+  }
+  const confirmed = window.confirm('Call it a night? This locks the room and shows the recap to everyone.');
+  if (!confirmed) return;
+  try {
+    await fb.endNight(roomCode);
+  } catch (e) {
+    console.error('End night failed:', e);
+    toast.show('Failed to end night');
+  }
 }
 
 export function toggle() {
@@ -77,6 +125,7 @@ export function show() {
   init();
   const overlay = document.getElementById('host-menu-overlay');
   if (overlay) {
+    _renderMenuItems();
     overlay.style.display = 'block';
 
     // Manage focus: focus first interactive element

@@ -69,6 +69,20 @@ export function show(activeTab = 'dashboard') {
 
   _activeTab = activeTab;
   render();
+
+  // Fonts can finish loading after the first render and grow the nav; remeasure
+  // once they're ready so docked bars stay flush against the tabs.
+  if (document.fonts?.ready) document.fonts.ready.then(_syncNavHeight);
+}
+
+// Publish the nav's real pixel height as --nav-height so the screen's bottom
+// padding and any .docked-bar sit flush on top of the tabs (the old hardcoded
+// 80px left a small gap, since the rendered nav is a few px shorter).
+function _syncNavHeight() {
+  const nav = document.getElementById('bottom-nav');
+  if (!nav || nav.style.display === 'none') return;
+  const h = nav.offsetHeight;
+  if (h) document.documentElement.style.setProperty('--nav-height', `${h}px`);
 }
 
 export function hide() {
@@ -143,4 +157,6 @@ function render() {
       router.navigate(tabId, { roomCode });
     });
   });
+
+  _syncNavHeight();
 }

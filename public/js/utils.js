@@ -21,21 +21,32 @@ export function escapeHTML(str) {
  * playerScores: Array of { name: string, score: number } for all active players.
  * Returns a Promise<boolean> — true if host confirms, false if cancelled.
  */
-export function confirmRoundDialog(playerScores) {
+export function confirmRoundDialog(playerScores, options = {}) {
+  // When requireNoSaveAck is set (Jua on, but no first-save captured this round),
+  // the host must tick a "no saves this round" box before CONFIRM enables — a guard
+  // against forgetting to mark a first save.
+  const requireNoSaveAck = !!options.requireNoSaveAck;
   return new Promise((resolve) => {
-    // A player gets their own row if they scored, hit flip7, or earned a first save —
-    // even when that score is 0 (first save at 0 points still counts).
+    // A player gets their own row if they scored, hit flip7, earned a first save, or
+    // a spectator touched their entry (so the host always sees spectator edits, even
+    // a spectator-entered 0). Spectator (red-highlighted) rows first; within each set,
+    // first-save on top, then flip7. Sort is stable, so ties keep original order.
     const shown = playerScores
-      .filter((p) => p.score !== 0 || p.flip7 || p.firstSave)
-      .sort((a, b) => (b.flip7 || b.firstSave ? 1 : 0) - (a.flip7 || a.firstSave ? 1 : 0));
-    const others = playerScores.filter((p) => p.score === 0 && !p.flip7 && !p.firstSave);
+      .filter((p) => p.score !== 0 || p.flip7 || p.firstSave || p.spectator)
+      .sort((a, b) =>
+        (b.spectator ? 1 : 0) - (a.spectator ? 1 : 0)
+        || (b.firstSave ? 1 : 0) - (a.firstSave ? 1 : 0)
+        || (b.flip7 ? 1 : 0) - (a.flip7 ? 1 : 0)
+      );
+    const others = playerScores.filter((p) => p.score === 0 && !p.flip7 && !p.firstSave && !p.spectator);
 
     const rows = [
       ...shown.map((p) => ({
         name: p.name,
         value: `${p.flip7 ? '🔥 ' : p.firstSave ? '❤️ ' : ''}${p.score}`,
+        spectator: !!p.spectator,
       })),
-      ...(others.length > 0 ? [{ name: shown.length === 0 ? 'All' : 'Others', value: '0' }] : []),
+      ...(others.length > 0 ? [{ name: shown.length === 0 ? 'All' : 'Others', value: '0', spectator: false }] : []),
     ];
 
     const el = document.createElement('div');
@@ -49,7 +60,7 @@ export function confirmRoundDialog(playerScores) {
             Confirm round
           </p>
         </div>
-        <div class="px-5 pt-3 pb-2 max-h-48 overflow-y-auto">
+        <div class="px-5 pt-3 pb-2 max-h-96 overflow-y-auto">
           <table class="w-full border-collapse">
             <thead>
               <tr class="border-b-2 border-b-primary">
@@ -59,7 +70,7 @@ export function confirmRoundDialog(playerScores) {
             </thead>
             <tbody>
               ${rows.map((r) => `
-                <tr class="border-b border-outline-variant last:border-0">
+                <tr class="border-b border-outline-variant last:border-0"${r.spectator ? ' style="background:#fecaca"' : ''}>
                   <td class="px-3 py-2 font-headline font-bold text-base uppercase truncate">${escapeHTML(r.name)}</td>
                   <td class="px-3 py-2 font-mono font-bold text-base text-right whitespace-nowrap">${r.value}</td>
                 </tr>
@@ -67,11 +78,20 @@ export function confirmRoundDialog(playerScores) {
             </tbody>
           </table>
         </div>
+        ${requireNoSaveAck ? `
+        <label id="crd-nosave-row" class="flex items-center justify-center gap-3 px-5 pt-1 pb-1 cursor-pointer select-none">
+          <input id="crd-nosave" type="checkbox" class="peer sr-only">
+          <span aria-hidden="true" class="shrink-0 w-5 h-5 border border-primary bg-surface-container-lowest peer-checked:bg-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-focus-visible:ring-offset-1 flex items-center justify-center">
+            <span class="material-symbols-outlined" style="font-size:16px;color:#fff;font-variation-settings:'wght' 700">check</span>
+          </span>
+          <span class="font-headline font-bold text-sm uppercase">No saves this round</span>
+        </label>
+        ` : ''}
         <div class="px-5 pb-5 pt-3 flex gap-2">
           <button id="crd-cancel" type="button" aria-label="Cancel" class="btn-secondary flex-none flex items-center justify-center self-stretch" style="padding:0;background:#f4f4f2">
             <span class="material-symbols-outlined" style="font-size:20px">close</span>
           </button>
-          <button id="crd-confirm" type="button" class="btn-primary" style="flex:3">CONFIRM</button>
+          <button id="crd-confirm" type="button" class="btn-primary" style="flex:3" ${requireNoSaveAck ? 'disabled' : ''}>CONFIRM</button>
         </div>
       </div>
     `;
@@ -88,7 +108,12 @@ export function confirmRoundDialog(playerScores) {
     el.querySelector('#crd-backdrop').addEventListener('click', () => cleanup(false));
     const crdCancel = el.querySelector('#crd-cancel');
     crdCancel.addEventListener('click', () => cleanup(false));
-    el.querySelector('#crd-confirm').addEventListener('click', () => cleanup(true));
+    const crdConfirm = el.querySelector('#crd-confirm');
+    crdConfirm.addEventListener('click', () => cleanup(true));
+    const crdNoSave = el.querySelector('#crd-nosave');
+    if (crdNoSave) {
+      crdNoSave.addEventListener('change', () => { crdConfirm.disabled = !crdNoSave.checked; });
+    }
     requestAnimationFrame(() => { crdCancel.style.width = crdCancel.offsetHeight + 'px'; });
   });
 }

@@ -23,7 +23,7 @@ body {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   height: 100%;
-  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0));
+  padding-bottom: calc(var(--nav-height, 80px) + env(safe-area-inset-bottom, 0));
 }
 
 .screen.no-nav {
@@ -31,6 +31,24 @@ body {
 }
 .screen.active {
   display: block;
+}
+
+/* ── Docked action bar ──
+   Pinned to the bottom of the app column, sitting flush above the bottom nav.
+   When the nav is hidden (.screen.no-nav) it drops to the very bottom. */
+.docked-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  max-width: 430px;
+  margin-left: auto;
+  margin-right: auto;
+  bottom: calc(var(--nav-height, 80px) + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  border-top: 1px solid #c6c6c6;
+}
+.screen.no-nav .docked-bar {
+  bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ── Bottom Nav ── */
@@ -54,8 +72,6 @@ body {
 
 .nav-item.active {
   color: #1a1c1b;
-  border-top: 4px solid #1a1c1b;
-  padding-top: 8px;
 }
 
 .nav-item span:last-child {
@@ -82,6 +98,11 @@ body {
   letter-spacing: 0.05em;
   text-align: center;
   width: 100%;
+  /* Let the browser keep vertical scrolling while we handle horizontal
+     swipe-to-dismiss gestures ourselves. */
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
 }
 
 .toast.show {
@@ -90,17 +111,8 @@ body {
 }
 
 /* ── Player Accent Colors ── */
-.accent-0  { --accent: #0047FF; }
-.accent-1  { --accent: #FF2E2E; }
-.accent-2  { --accent: #FFB800; }
-.accent-3  { --accent: #00B85C; }
-.accent-4  { --accent: #8B5CF6; }
-.accent-5  { --accent: #EC4899; }
-.accent-6  { --accent: #14B8A6; }
-.accent-7  { --accent: #F97316; }
-.accent-8  { --accent: #6366F1; }
-.accent-9  { --accent: #84CC16; }
-
+/* Accent colours are applied inline from js/state.js (ACCENT_COLORS / accentColor).
+   The accent bar only needs the var fallback for any element that sets --accent. */
 .accent-bar {
   height: 6px;
   width: 100%;
@@ -182,6 +194,27 @@ input[type="number"] {
 .btn-secondary:hover { background: #e8e8e6; }
 .btn-secondary:active { transform: scale(0.98); }
 .btn-secondary:focus-visible { outline: 2px solid #0046fa; outline-offset: 2px; }
+
+/* Negative / destructive variant — outlined: red border + red text, no fill. */
+.btn-danger {
+  background: transparent;
+  color: #ba1a1a;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 14px 24px;
+  border: 1px solid #ba1a1a;
+  cursor: pointer;
+  transition: background 0.15s;
+  width: 100%;
+  font-size: 16px;
+}
+
+.btn-danger:hover { background: rgba(186, 26, 26, 0.08); }
+.btn-danger:active { transform: scale(0.98); }
+.btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-danger:focus-visible { outline: 2px solid #ba1a1a; outline-offset: 2px; }
 
 /* ── Modal / Bottom Sheet ── */
 .modal-overlay {
@@ -277,8 +310,4 @@ button.nav-item {
 button.nav-item:focus-visible {
   outline: 2px solid #0046fa;
   outline-offset: -2px;
-}
-
-button.nav-item.active {
-  border-top: 4px solid #1a1c1b;
 }

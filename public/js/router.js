@@ -92,6 +92,11 @@ function _renderScreen(screenId, params = {}) {
 
   _currentId = screenId;
 
+  // The header sound button shows on every screen by default; a screen's mount
+  // may hide it (e.g. game-select). Reset here so it reappears when leaving them.
+  const soundBtn = document.getElementById('top-bar-sound');
+  if (soundBtn) soundBtn.style.display = '';
+
   try {
     screen.mount(el, params);
   } catch (e) {

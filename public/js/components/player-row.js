@@ -2,7 +2,7 @@
 // Reusable Player Scoreboard Row
 // ═══════════════════════════════════════════
 
-import { ACCENT_COLORS } from '../state.js';
+import { accentColor } from '../state.js';
 import { escapeHTML } from '../utils.js';
 
 /**
@@ -33,7 +33,7 @@ export function renderRow({
   winMode = 'highest_total',
   fineCount = 0,
 }) {
-  const color = ACCENT_COLORS[accentIndex % ACCENT_COLORS.length];
+  const color = accentColor(accentIndex);
   const bgClass = 'bg-surface-container-lowest';
 
   // Guard against NaN/Infinity leaking into the UI. If we ever see one,

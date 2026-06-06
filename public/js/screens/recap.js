@@ -5,8 +5,9 @@
 import * as state from '../state.js';
 import * as router from '../router.js';
 import * as bottomNav from '../components/bottom-nav.js';
+import * as hostMenu from '../components/host-menu.js';
 import { computeNightStats } from '../stats.js';
-import { ACCENT_COLORS } from '../state.js';
+import { accentColor } from '../state.js';
 import { escapeHTML } from '../utils.js';
 
 export function mount(container, params = {}) {
@@ -25,20 +26,13 @@ export function mount(container, params = {}) {
   }
   const topBar = document.getElementById('top-bar');
   topBar.style.display = 'flex';
-  document.getElementById('top-bar-title').textContent = locked ? 'NIGHT LOCKED' : 'NIGHT RECAP';
+  document.getElementById('top-bar-title').textContent = locked ? 'FINAL RECAP' : 'RECAP';
 
-  const backBtn = document.getElementById('top-bar-back');
-  if (locked) {
-    backBtn.classList.add('hidden');
-  } else {
-    backBtn.classList.remove('hidden');
-    backBtn.textContent = 'arrow_back';
-    backBtn.setAttribute('aria-label', 'Go back');
-    backBtn.onclick = () => router.navigate('lobby', { roomCode }, 'back');
-  }
-  document.getElementById('top-bar-actions').innerHTML = locked
-    ? `<span class="font-mono text-[10px] text-outline border border-outline px-2 py-1 flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[12px]">lock</span>LOCKED</span>`
-    : '';
+  // No back button — recap is a nav tab; the header carries the shared
+  // copy-link + QR + overflow (host only), matching the Lobby and Game tabs.
+  document.getElementById('top-bar-back').classList.add('hidden');
+  hostMenu.hide();
+  hostMenu.renderTopBarActions(roomCode);
 
   if (!roomCode) {
     router.navigate('home');
@@ -88,7 +82,7 @@ export function mount(container, params = {}) {
             <div class="col-span-4 font-mono text-[10px] uppercase tracking-widest text-outline text-right">NIGHT NET</div>
           </div>
           ${stats.winnings.players.map((p, i) => {
-            const color = ACCENT_COLORS[p.accentIndex % ACCENT_COLORS.length];
+            const color = accentColor(p.accentIndex);
             const bgClass = i % 2 === 0 ? 'bg-surface-container-lowest' : '';
             const net = parseFloat(p.net.toFixed(1));
             const netStr = `${net >= 0 ? '+' : '-'}&#8377;${Math.abs(net)}`;
@@ -121,7 +115,7 @@ export function mount(container, params = {}) {
   if (stats.mvpId) {
     const mvp = stats.overall.find((p) => p.playerId === stats.mvpId);
     if (mvp) {
-      const color = ACCENT_COLORS[mvp.accentIndex % ACCENT_COLORS.length];
+      const color = accentColor(mvp.accentIndex);
       html += `
         <div class="bg-primary text-on-primary p-6 mb-8">
           <div class="flex items-center gap-2 mb-2">
@@ -150,7 +144,7 @@ export function mount(container, params = {}) {
           <div class="col-span-3 font-mono text-[10px] uppercase tracking-widest text-outline text-right">BEST</div>
         </div>
         ${stats.overall.map((p, i) => {
-          const color = ACCENT_COLORS[p.accentIndex % ACCENT_COLORS.length];
+          const color = accentColor(p.accentIndex);
           const bgClass = i % 2 === 0 ? 'bg-surface-container-lowest' : '';
           return `
             <div class="grid grid-cols-12 items-center px-4 py-3 border-b border-outline-variant last:border-0 ${bgClass}">
@@ -206,7 +200,7 @@ export function mount(container, params = {}) {
     const playerStatList = Object.values(game.playerStats || {}).sort((a, b) => a.finalRank - b.finalRank);
 
     playerStatList.forEach((ps) => {
-      const color = ACCENT_COLORS[ps.accentIndex % ACCENT_COLORS.length];
+      const color = accentColor(ps.accentIndex);
       html += `
         <div class="bg-surface-container-lowest border border-outline mb-1">
           <div class="h-[2px]" style="background:${color}"></div>

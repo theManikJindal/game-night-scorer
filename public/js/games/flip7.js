@@ -2,7 +2,7 @@
 // Flip 7 Game Module
 // ═══════════════════════════════════════════
 
-import { ACCENT_COLORS } from '../state.js';
+import { accentColor } from '../state.js';
 import { escapeHTML } from '../utils.js';
 
 export default {
@@ -135,7 +135,7 @@ export default {
       <div class="flex flex-col gap-3">
         ${playerIds.map((pid) => {
           const p = snapshot[pid] || {};
-          const color = ACCENT_COLORS[p.accentIndex || 0];
+          const color = accentColor(p.accentIndex);
           const currentTotal = totals[pid] || 0;
           return `
             <div class="bg-surface-container-lowest border border-outline">

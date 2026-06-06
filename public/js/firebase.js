@@ -231,8 +231,7 @@ export async function submitRound(roomCode, gameId, roundIndex, roundData, newTo
 
   updates[`rooms/${roomCode}/games/${gameId}/rounds/${roundIndex}`] = roundData;
   updates[`rooms/${roomCode}/games/${gameId}/totals`] = newTotals;
-  updates[`rooms/${roomCode}/games/${gameId}/liveTotals`] = null; // clear live preview on commit
-  updates[`rooms/${roomCode}/games/${gameId}/liveRound`] = null;
+  updates[`rooms/${roomCode}/games/${gameId}/liveRound`] = null; // clear live preview on commit
   updates[`rooms/${roomCode}/lobby/updatedAt`] = Date.now();
 
   if (endResult) {
@@ -272,17 +271,40 @@ export async function undoLastRound(roomCode, gameId, newTotals, prevStatus) {
   await db.ref().update(updates);
 }
 
-export async function updateLiveTotals(roomCode, gameId, liveTotals, liveRound = null) {
-  if (!db) return;
-  await db.ref().update({
-    [`rooms/${roomCode}/games/${gameId}/liveTotals`]: liveTotals,
-    [`rooms/${roomCode}/games/${gameId}/liveRound`]: liveRound,
+// Compare-and-swap save of a player's in-progress Flip 7 selection. liveRound is
+// the single source of truth for the in-progress round; the live total is derived
+// on read (totals[pid] + liveRound[pid].pts). first-save is stored per player as
+// liveRound[pid].firstSave.
+//
+// The transaction runs on the PARENT liveRound node — not liveRound/{pid} —
+// because first-save is exclusive: marking one player must atomically clear the
+// previous holder, which is a second child. We guard on the edited player's .v
+// (the baseline captured when the drawer opened); when this save marks first-save
+// we also clear any other holder and bump their version, so a concurrent editor of
+// that player CAS-fails too. Returns { ok } — ok:false means another device changed
+// this player first, or the round was committed underneath us.
+export async function saveLiveRoundCAS(roomCode, gameId, pid, baseVersion, newEntry) {
+  if (!db) return { ok: false };
+  const ref = db.ref(`rooms/${roomCode}/games/${gameId}/liveRound`);
+  const result = await ref.transaction((current) => {
+    const map = current || {};
+    const cur = map[pid];
+    const curV = cur ? (cur.v || 0) : 0;
+    if (curV !== baseVersion) return; // abort — CAS fail
+    const next = { ...map };
+    next[pid] = { ...newEntry, v: curV + 1 };
+    if (newEntry.firstSave) {
+      Object.keys(next).forEach((id) => {
+        if (id !== pid && next[id] && next[id].firstSave) {
+          // This actor just modified the prior holder's entry, so its `by` (which
+          // drives the row highlight) tracks them too, alongside the version bump.
+          next[id] = { ...next[id], firstSave: false, by: newEntry.by, v: (next[id].v || 0) + 1 };
+        }
+      });
+    }
+    return next;
   });
-}
-
-export async function updateJuaLive(roomCode, gameId, firstSavePid) {
-  if (!db) return;
-  await db.ref(`rooms/${roomCode}/games/${gameId}/juaLive`).set({ firstSavePid: firstSavePid || null });
+  return { ok: result.committed };
 }
 
 export async function updateJuaFines(roomCode, gameId, fines) {
@@ -294,7 +316,6 @@ export async function adjustTotals(roomCode, gameId, newTotals) {
   if (!db) return;
   await db.ref().update({
     [`rooms/${roomCode}/games/${gameId}/totals`]: newTotals,
-    [`rooms/${roomCode}/games/${gameId}/liveTotals`]: null,
     [`rooms/${roomCode}/lobby/updatedAt`]: Date.now(),
   });
 }
@@ -346,7 +367,6 @@ export async function patchLastRoundMulti(roomCode, gameId, roundKey, pidEntries
   if (!db) return;
   const updates = {
     [`rooms/${roomCode}/games/${gameId}/totals`]: newTotals,
-    [`rooms/${roomCode}/games/${gameId}/liveTotals`]: null,
     [`rooms/${roomCode}/lobby/updatedAt`]: Date.now(),
   };
   Object.entries(pidEntries).forEach(([pid, entry]) => {

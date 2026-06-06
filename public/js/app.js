@@ -50,6 +50,18 @@ async function init() {
   // Init shared host menu
   hostMenu.init();
 
+  // Header sound button — plays a one-shot mp3 on tap. The button lives in the
+  // top bar (outside #top-bar-actions, which screens overwrite), so it's wired
+  // once here. Reuse a single Audio element and rewind so rapid taps re-trigger.
+  const soundBtn = document.getElementById('top-bar-sound');
+  if (soundBtn) {
+    const sound = new Audio('sounds/fahhh.mp3');
+    soundBtn.addEventListener('click', () => {
+      sound.currentTime = 0;
+      sound.play().catch(() => { /* autoplay/file-missing — ignore */ });
+    });
+  }
+
   // Pre-hydrate state from URL + cache BEFORE router fires its initial _onHashChange.
   // Without this, screens that read state.get('roomCode') on a hash-based refresh
   // (e.g. refreshing while on #lobby or #dashboard) would find state empty and bail.
