@@ -333,7 +333,7 @@ export function mount(container, params = {}) {
                   <tr class="border-b border-outline">
                     <th class="${headCls} pl-4 pr-3 text-center" style="${rankColStyle}">Rank</th>
                     <th class="${headCls} pr-3 text-left">Player</th>
-                    <th class="${headCls} pl-3 pr-4 text-right">Winnings</th>
+                    <th id="winnings-col-header" role="button" tabindex="0" aria-label="Expand all breakdowns" class="${headCls} pl-3 pr-4 text-right cursor-pointer select-none whitespace-nowrap"><span class="material-symbols-outlined" style="font-size:20px;vertical-align:middle;line-height:1">unfold_more</span> <span class="col-header-label">Winnings</span></th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-outline-variant">${winningsRows}</tbody>
@@ -391,6 +391,19 @@ export function mount(container, params = {}) {
     cell.setAttribute('aria-pressed', String(show));
   };
 
+  let _allExpanded = false;
+
+  const _setAllBreakdowns = (show) => {
+    _allExpanded = show;
+    winningsCells.forEach((cell) => _setCellBreakdown(cell, show));
+    const header = container.querySelector('#winnings-col-header');
+    if (header) {
+      header.querySelector('.material-symbols-outlined').textContent = show ? 'unfold_less' : 'unfold_more';
+      header.querySelector('.col-header-label').textContent = show ? 'Breakdown' : 'Winnings';
+      header.setAttribute('aria-label', show ? 'Collapse all breakdowns' : 'Expand all breakdowns');
+    }
+  };
+
   winningsCells.forEach((cell) => {
     const toggle = () => {
       const amt = cell.querySelector('.winnings-amount');
@@ -402,6 +415,14 @@ export function mount(container, params = {}) {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
     });
   });
+
+  const winningsHeader = container.querySelector('#winnings-col-header');
+  if (winningsHeader) {
+    winningsHeader.addEventListener('click', () => _setAllBreakdowns(!_allExpanded));
+    winningsHeader.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _setAllBreakdowns(!_allExpanded); }
+    });
+  }
 
   // The Scores/Winnings choice is remembered per game, so it survives tab
   // navigation but resets to Scores once a new game ends (the activeGameId
