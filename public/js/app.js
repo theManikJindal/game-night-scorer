@@ -99,7 +99,10 @@ async function init() {
     if (justLocked && screen !== 'recap') {
       router.navigate('recap', { roomCode });
     } else if (prevLobby?.status === 'night-ended' && newLobby.status === 'waiting') {
-      if (screen === 'recap') router.navigate('lobby', { roomCode });
+      // "One More Game": send only the host to the lobby (where the fresh
+      // "Start Game" button lives). Spectators stay put on the recap until a
+      // new game actually starts (then the recap watcher moves them to it).
+      if (screen === 'recap' && state.isHost()) router.navigate('lobby', { roomCode });
     }
   });
 

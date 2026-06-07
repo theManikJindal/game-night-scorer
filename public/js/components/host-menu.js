@@ -49,6 +49,8 @@ export function init() {
       hostTransfer.requestBecomeHost(roomCode);
     } else if (action === 'call-night') {
       await _callItANight(roomCode);
+    } else if (action === 'one-more-game') {
+      await _oneMoreGame(roomCode);
     } else if (action === 'exit-lobby') {
       // Mid-game leave deserves a stronger warning since it strands other clients.
       const lobby = state.get('roomLobby') || {};
@@ -63,9 +65,11 @@ export function init() {
 }
 
 // Build the overflow menu items. Shared across the Lobby, Game, and Recap tabs so
-// everyone sees the same menu everywhere. All items use the negative (error) variant.
+// everyone sees the same menu everywhere. Destructive items use the negative (error)
+// variant; positive ones (e.g. "One More Game") use the default variant.
 // "End Game" only shows while a game is actually in progress; "Call it a Night" only
-// once stats are tracked and a game has finished (and the night isn't already locked).
+// once stats are tracked and a game has finished (and the night isn't already locked);
+// "One More Game" replaces it once the night is locked.
 function _renderMenuItems() {
   const itemsEl = document.getElementById('host-menu-items');
   if (!itemsEl) return;
@@ -82,20 +86,29 @@ function _renderMenuItems() {
 
     if (gameActive) items.push({ action: 'end-game', icon: 'stop_circle', label: 'End Game' });
     if (canCallNight) items.push({ action: 'call-night', icon: 'bedtime', label: 'Call it a Night' });
+    // Once the night's been called, offer to resume it for another game. Unlike
+    // the other (destructive) actions, this is a positive, non-error action.
+    if (lobby.status === 'night-ended') {
+      items.push({ action: 'one-more-game', icon: 'replay', label: 'One More Game', variant: 'default' });
+    }
   } else {
     // Spectators can request to take over as host (via the request → approve flow).
     items.push({ action: 'become-host', icon: 'swap_horiz', label: 'Become Host' });
   }
-  // Everyone gets "Exit Lobby".
-  items.push({ action: 'exit-lobby', icon: 'logout', label: 'Exit Lobby' });
+  // Everyone gets "Leave Lobby".
+  items.push({ action: 'exit-lobby', icon: 'logout', label: 'Leave Lobby' });
 
-  const base = 'host-menu-action w-full text-left px-4 py-3 font-headline font-bold text-xs uppercase tracking-widest text-error hover:bg-surface-container-high transition-colors flex items-center gap-3';
-  itemsEl.innerHTML = items.map((it, i) => `
-    <button class="${base}${i < items.length - 1 ? ' border-b border-outline-variant' : ''}" data-action="${it.action}">
+  const base = 'host-menu-action w-full text-left px-4 py-3 font-headline font-bold text-xs uppercase tracking-widest hover:bg-surface-container-high transition-colors flex items-center gap-3';
+  itemsEl.innerHTML = items.map((it, i) => {
+    // Most items are destructive (error variant); a few are positive (default).
+    const color = it.variant === 'default' ? 'text-on-surface' : 'text-error';
+    return `
+    <button class="${base} ${color}${i < items.length - 1 ? ' border-b border-outline-variant' : ''}" data-action="${it.action}">
       <span aria-hidden="true" class="material-symbols-outlined text-sm">${it.icon}</span>
       ${it.label.toUpperCase()}
     </button>
-  `).join('');
+  `;
+  }).join('');
 }
 
 async function _callItANight(roomCode) {
@@ -110,6 +123,24 @@ async function _callItANight(roomCode) {
   } catch (e) {
     console.error('End night failed:', e);
     toast.show('Failed to end night');
+  }
+}
+
+// Reverse "Call it a Night": unlock the room back to the 'waiting' state. We
+// also clear activeGameId — the night's last game is over, so we don't want its
+// tab restored; the host lands on the Lobby with a fresh "Start Game" button.
+// (app.js navigates only the host to the lobby; spectators stay on the recap
+// until a new game actually starts.)
+async function _oneMoreGame(roomCode) {
+  if (!state.isHost()) {
+    toast.show('Only the host can do that');
+    return;
+  }
+  try {
+    await fb.updateRoomLobby(roomCode, { status: 'waiting', activeGameId: null });
+  } catch (e) {
+    console.error('Resume night failed:', e);
+    toast.show('Failed to start another game');
   }
 }
 
