@@ -221,7 +221,7 @@ export default {
       </div>
       <div class="bg-primary text-on-primary p-6">
         <p class="text-sm tracking-wide opacity-80 uppercase font-mono mb-2">THE MOST DANGEROUS CARD</p>
-        <h4 class="text-2xl font-headline font-black uppercase tracking-tighter leading-none mb-3">Worth 40 Points</h4>
+        <h4 class="text-2xl font-headline font-extrabold uppercase tracking-tighter leading-none mb-3">Worth 40 Points</h4>
         <p class="opacity-90 leading-relaxed text-sm">Each round, a suit is randomly determined. The 7 of that suit becomes the Papayoo, worth 40 penalty points. All other 7s (Payoos) are worth their face value.</p>
       </div>
     </section>

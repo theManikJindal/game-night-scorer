@@ -123,13 +123,6 @@ export function mount(container, params = {}) {
           <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>
         </button>
       </div>
-
-      <!-- Become Host (visible to all when no host) -->
-      <div id="become-host-section" style="display:none">
-        <button id="btn-become-host" class="w-full bg-surface-container-lowest border border-outline py-3 font-headline font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors">
-          BECOME HOST
-        </button>
-      </div>
     </div>
   `;
 
@@ -166,14 +159,6 @@ function _bindEvents(container, roomCode) {
   // Go to game (spectators, once the host has started a game) — jumps to the board.
   container.querySelector('#btn-go-to-game')?.addEventListener('click', () => {
     router.navigate('dashboard', { roomCode });
-  });
-
-  container.querySelector('#btn-become-host')?.addEventListener('click', async () => {
-    try {
-      await fb.claimHost(roomCode);
-    } catch (e) {
-      toast.show('Failed to claim host');
-    }
   });
 
   // Allow-spectators-to-score toggle (host only). Flip optimistically, persist to
@@ -380,9 +365,6 @@ function _render(container, roomCode) {
     _lastTopBarHost = isHost;
   }
 
-  const becomeHostSection = container.querySelector('#become-host-section');
-  if (becomeHostSection) becomeHostSection.style.display = (!lobby.hostKey && !isHost) ? 'block' : 'none';
-
   // Spectators get a "Go to game" shortcut to the live board once the host has
   // a game in progress.
   const spectatorGameSection = container.querySelector('#spectator-game-section');
@@ -428,8 +410,7 @@ function _render(container, roomCode) {
   const showStart = isHost && !isPlaying && !nightLocked;
   const showFinished = isHost && isGameFinished;
   const showGoToGame = !isHost && isPlaying && gameInProgress;
-  const showBecomeHost = !lobby.hostKey && !isHost;
-  const anyAction = showSpectatorToggle || showStart || showFinished || nightLocked || showGoToGame || showBecomeHost;
+  const anyAction = showSpectatorToggle || showStart || showFinished || nightLocked || showGoToGame;
   const actionsBar = container.querySelector('#lobby-actions');
   if (actionsBar) actionsBar.style.display = anyAction ? 'flex' : 'none';
   // Reserve scroll space so the player grid clears the docked bar when shown.

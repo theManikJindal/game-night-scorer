@@ -40,7 +40,7 @@ export function mount(container, params = {}) {
       <div class="flex justify-between items-end mb-6">
         <div>
           <p class="font-mono text-[0.625rem] uppercase tracking-widest text-outline mb-1">CHOOSE YOUR GAME</p>
-          <h2 class="font-headline font-black text-2xl uppercase tracking-tight">What are we playing?</h2>
+          <h2 class="font-headline font-extrabold text-2xl uppercase tracking-tight">What are we playing?</h2>
         </div>
         <span class="font-mono text-[0.625rem] border border-outline px-2 py-1 uppercase">${playerCount} Players</span>
       </div>
@@ -56,7 +56,7 @@ export function mount(container, params = {}) {
                   <span class="font-mono text-[0.625rem] text-outline tracking-widest uppercase">${g.minPlayers}-${g.maxPlayers} PLAYERS / ${g.winMode === 'highest_total' ? 'HIGHEST WINS' : 'LOWEST WINS'}</span>
                   <div class="game-check w-7 h-7 border-2 border-outline-variant flex items-center justify-center transition-all"></div>
                 </div>
-                <h3 class="font-headline font-black text-3xl uppercase tracking-tighter mb-2 group-hover:text-secondary transition-colors">${g.label}</h3>
+                <h3 class="font-headline font-extrabold text-3xl uppercase tracking-tighter mb-2 group-hover:text-secondary transition-colors">${g.label}</h3>
                 <p class="text-on-surface-variant text-sm leading-relaxed">${g.description}</p>
               </button>
             </div>

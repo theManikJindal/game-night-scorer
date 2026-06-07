@@ -79,7 +79,7 @@ function _render(container, roomCode) {
       <div class="flex justify-between items-end mb-4">
         <div>
           <p class="font-mono text-[0.625rem] uppercase tracking-widest text-outline">ENTER SCORES</p>
-          <h2 class="font-headline font-black text-2xl uppercase tracking-tight">Round ${roundNum}</h2>
+          <h2 class="font-headline font-extrabold text-2xl uppercase tracking-tight">Round ${roundNum}</h2>
         </div>
         <div class="flex items-center gap-3">
           <button id="btn-reset-form" type="button" class="font-mono text-[0.625rem] uppercase tracking-widest text-outline hover:text-on-surface underline-offset-2 hover:underline transition-colors">RESET FORM</button>

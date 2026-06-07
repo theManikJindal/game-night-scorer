@@ -63,7 +63,7 @@ export function mount(container, params = {}) {
   // ── Night Overview Header ──
   html += `
     <section class="border-l-4 border-primary pl-6 mb-8">
-      <h2 class="text-3xl font-headline font-black uppercase tracking-tight leading-[0.9] mb-2">NIGHT<br>RECAP</h2>
+      <h2 class="text-3xl font-headline font-extrabold uppercase tracking-tight leading-[0.9] mb-2">NIGHT<br>RECAP</h2>
       <p class="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-outline">${stats.totalGames} GAME${stats.totalGames > 1 ? 'S' : ''} / ${stats.totalRounds} ROUNDS</p>
     </section>
   `;
@@ -122,7 +122,7 @@ export function mount(container, params = {}) {
             <span aria-hidden="true" class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
             <span class="font-mono text-[0.625rem] uppercase tracking-widest opacity-80">MOST VALUABLE PLAYER</span>
           </div>
-          <h3 class="font-headline font-black text-3xl uppercase tracking-tight">${escapeHTML(mvp.name)}</h3>
+          <h3 class="font-headline font-extrabold text-3xl uppercase tracking-tight">${escapeHTML(mvp.name)}</h3>
           <p class="font-mono text-sm opacity-80 mt-1">${mvp.gamesWon} WIN${mvp.gamesWon > 1 ? 'S' : ''} / ${mvp.gamesPlayed} GAME${mvp.gamesPlayed > 1 ? 'S' : ''}</p>
         </div>
       `;

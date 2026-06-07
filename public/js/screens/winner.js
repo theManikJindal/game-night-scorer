@@ -66,7 +66,7 @@ export function mount(container, params = {}) {
             <span class="font-headline text-xl uppercase tracking-widest opacity-80">WINNER</span>
           </div>
 
-          <h1 class="confetti-text font-headline font-black text-7xl uppercase tracking-tight leading-none truncate">${escapeHTML(winner.name || 'UNKNOWN')}</h1>
+          <h1 class="confetti-text font-headline font-extrabold text-7xl uppercase tracking-tight leading-none truncate">${escapeHTML(winner.name || 'UNKNOWN')}</h1>
         </div>
 
         <!-- Standings -->

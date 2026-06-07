@@ -31,6 +31,7 @@ import * as scoringScreen from './screens/scoring.js';
 import * as winnerScreen from './screens/winner.js';
 import * as recapScreen from './screens/recap.js';
 import * as hostMenu from './components/host-menu.js';
+import * as hostTransfer from './components/host-transfer.js';
 
 // ── Init ──
 async function init() {
@@ -82,6 +83,10 @@ async function init() {
 
   // Auto-navigate on night-ended / night-resumed status changes.
   state.on('roomLobby', (newLobby, prevLobby) => {
+    // Drive the host-transfer dialogs (host's "Change host" countdown + the
+    // requestor's resolution) from the global watcher, so they work on any screen.
+    hostTransfer.handleLobbyUpdate(newLobby, prevLobby);
+
     if (!newLobby) return;
     const screen = router.currentScreen();
     const roomCode = newLobby.roomCode || state.get('roomCode');

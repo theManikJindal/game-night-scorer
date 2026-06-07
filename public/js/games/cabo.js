@@ -345,7 +345,7 @@ export default {
       </div>
       <div class="bg-primary text-on-primary p-6">
         <p class="text-sm tracking-wide opacity-80 uppercase font-mono mb-2">THE KAMIKAZE</p>
-        <h4 class="text-2xl font-headline font-black uppercase tracking-tighter leading-none mb-3">The Perfect Reset</h4>
+        <h4 class="text-2xl font-headline font-extrabold uppercase tracking-tighter leading-none mb-3">The Perfect Reset</h4>
         <p class="opacity-90 leading-relaxed text-sm">End the round with exactly two 12s and two 13s: your score is 0, every other player gets 50 penalty points.</p>
       </div>
       <div class="mt-4 bg-surface-container-lowest p-4 border border-outline-variant">

@@ -16,7 +16,7 @@ export function mount(container) {
   container.innerHTML = screenBody(`
       <!-- Logo -->
       <div class="text-center mb-16">
-        <h1 class="font-headline font-black uppercase tracking-tighter text-4xl leading-none">GAME<br>NIGHT<br>SCORER</h1>
+        <h1 class="font-headline font-extrabold uppercase tracking-tighter text-4xl leading-none">GAME<br>NIGHT<br>SCORER</h1>
       </div>
 
       <!-- Create -->
