@@ -6,7 +6,7 @@
         ".write": "$roomCode.matches(/^[A-Z]{4}[0-9]{2}$/)",
         "lobby": {
           "hostKey": {
-            ".validate": "newData.isString() && (!data.exists() || newData.val() === data.val())"
+            ".validate": "newData.isString() && (!data.exists() || newData.val() === data.val() || newData.val() === data.parent().child('hostChangeRequest/requestKey').val())"
           },
           "roomCode": {
             ".validate": "newData.val() === $roomCode"

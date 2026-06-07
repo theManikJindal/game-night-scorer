@@ -330,13 +330,6 @@ export async function updateRoomLobby(roomCode, updates) {
   await db.ref(`rooms/${roomCode}/lobby`).update({ ...updates, updatedAt: Date.now() });
 }
 
-export async function releaseHost(roomCode) {
-  if (!db) return;
-  localStorage.removeItem(`gns_host_${roomCode}`);
-  state.clearHostCache(roomCode);
-  await db.ref(`rooms/${roomCode}/lobby/hostKey`).set(null);
-}
-
 export async function claimHost(roomCode) {
   if (!db) return;
   const newKey = generateKey();
@@ -344,6 +337,57 @@ export async function claimHost(roomCode) {
   state.clearHostCache(roomCode);
   await db.ref(`rooms/${roomCode}/lobby/hostKey`).set(newKey);
 }
+
+// ── Host transfer (request → approve) ──
+// A spectator publishes a request key; the host approves it (or it auto-accepts
+// after a countdown). The host can't be overwritten directly — the takeover only
+// works because the DB rule (database.rules.json) allows hostKey to be set to the
+// pending request's requestKey. See docs in host-transfer.js.
+
+// Spectator publishes a host-change request and returns the requestKey it will
+// adopt as its host key once granted. requestedAt uses a server timestamp so all
+// clients agree on the request's age (used to ignore stale requests).
+export async function requestHostChange(roomCode, requestorName) {
+  if (!db) return null;
+  const requestKey = generateKey();
+  await db.ref(`rooms/${roomCode}/lobby/hostChangeRequest`).set({
+    requestKey,
+    requestorName: requestorName || '',
+    requestedAt: firebase.database.ServerValue.TIMESTAMP,
+  });
+  return requestKey;
+}
+
+// Grant a pending request: hand the host key to the requestor and clear the
+// request in one atomic write. Used by both the host (on accept/countdown) and
+// the requestor (fallback when the host never responds). Idempotent — both
+// writing the same requestKey is harmless.
+export async function grantHostChange(roomCode, requestKey) {
+  if (!db) return;
+  await db.ref(`rooms/${roomCode}/lobby`).update({
+    hostKey: requestKey,
+    hostChangeRequest: null,
+    updatedAt: Date.now(),
+  });
+}
+
+// The requestor adopts the granted key locally so isHost() flips to true.
+export function adoptHostKey(roomCode, key) {
+  localStorage.setItem(`gns_host_${roomCode}`, key);
+  state.clearHostCache(roomCode);
+}
+
+// Host declines the pending request. With blockMinutes set, also suppress further
+// requests until the window passes (the "decline all for N minutes" checkbox).
+export async function declineHostChange(roomCode, { blockMinutes = 0 } = {}) {
+  if (!db) return;
+  const updates = { hostChangeRequest: null, updatedAt: Date.now() };
+  if (blockMinutes > 0) {
+    updates.hostChangeBlockedUntil = Date.now() + blockMinutes * 60 * 1000;
+  }
+  await db.ref(`rooms/${roomCode}/lobby`).update(updates);
+}
+
 
 export async function submitGameEnd(roomCode, gameId, winnerId) {
   if (!db) return;
