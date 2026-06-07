@@ -9,6 +9,7 @@ import * as hostMenu from '../components/host-menu.js';
 import * as confetti from '../components/confetti.js';
 import { getGame } from '../games/registry.js';
 import { accentColor } from '../state.js';
+import { cumulativeJuaNets } from '../stats.js';
 import { escapeHTML } from '../utils.js';
 
 // Tracks which game's winner we've already auto-celebrated, so returning to the
@@ -132,7 +133,36 @@ export function mount(container, params = {}) {
               || Object.values(game.juaFines || {}).some((n) => n > 0)
             );
 
-            const rows = standings.map((s) => {
+            // This game's net winnings for a standing (0 when JUA is off). Used
+            // below as the displayed amount in the Winnings column.
+            const netOf = (s) => {
+              if (!juaOn) return 0;
+              const savesCount = savesCounts[s.playerId] || 0;
+              const finesCount = (game.juaFines || {})[s.playerId] || 0;
+              return positionReward(s.rank) - buyIn
+                - savesCount * firstSaveAmt - finesCount * influenceFine;
+            };
+
+            // Secondary sort key: each player's cumulative net winnings across the
+            // night's completed games so far — excluding the game shown here (the
+            // active game). Filter by the games map key so it's robust even if a
+            // game object lacks a gameId field.
+            const allGames = state.get('games') || {};
+            const activeId = state.get('roomLobby')?.activeGameId || null;
+            const priorGames = Object.entries(allGames)
+              .filter(([id]) => id !== activeId)
+              .map(([, g]) => g);
+            const priorWinnings = cumulativeJuaNets(priorGames);
+
+            // Order: rank ascending, then cumulative prior winnings descending
+            // within the same rank (higher earners first). Both tables render from
+            // this single sorted list so Scores and Winnings stay aligned.
+            const sortedStandings = [...standings].sort((a, b) => {
+              if (a.rank !== b.rank) return a.rank - b.rank;
+              return (priorWinnings.get(b.playerId) || 0) - (priorWinnings.get(a.playerId) || 0);
+            });
+
+            const rows = sortedStandings.map((s) => {
               const p = snapshot[s.playerId] || {};
               const savesCount = savesCounts[s.playerId] || 0;
               const finesCount = (game.juaFines || {})[s.playerId] || 0;
@@ -154,7 +184,7 @@ export function mount(container, params = {}) {
                 const savesCost = savesCount * firstSaveAmt;
                 const finesCost = finesCount * influenceFine;
                 const reward = positionReward(s.rank);
-                const net = reward - buyIn - savesCost - finesCost;
+                const net = netOf(s);
                 // Each term carries its own operator. Rewards (prize/pool) add;
                 // saves, fines and buy-in subtract — shown as " - " separators with
                 // the magnitude only (no inner minus sign on the number).

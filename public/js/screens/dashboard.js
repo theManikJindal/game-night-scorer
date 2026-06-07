@@ -11,6 +11,7 @@ import * as toast from '../components/toast.js';
 import * as hostMenu from '../components/host-menu.js';
 import { renderRow } from '../components/player-row.js';
 import { getGame } from '../games/registry.js';
+import { cumulativeJuaNets, liveJuaNets } from '../stats.js';
 import { escapeHTML, confirmRoundDialog, confirmSaveDialog } from '../utils.js';
 
 // Bolt Optimization: Memoize O(R*P) round points calculation
@@ -390,7 +391,20 @@ function _render(container, roomCode) {
       (a, b) => (orderMap.get(a.playerId) ?? Infinity) - (orderMap.get(b.playerId) ?? Infinity)
     );
   } else {
-    orderedStandings = standings;
+    // Leader (score) mode: rank ascending, then night winnings descending within
+    // a tied rank. Winnings = cumulative net from completed games PLUS this game's
+    // running net (so same-score players are separated by their current saves/fines).
+    const allGames = state.get('games') || {};
+    const priorGames = Object.entries(allGames)
+      .filter(([id]) => id !== game.gameId)
+      .map(([, g]) => g);
+    const priorWinnings = cumulativeJuaNets(priorGames);
+    const liveWinnings = liveJuaNets(game);
+    const winningsOf = (pid) => (priorWinnings.get(pid) || 0) + (liveWinnings.get(pid) || 0);
+    orderedStandings = [...standings].sort((a, b) => {
+      if (a.rank !== b.rank) return a.rank - b.rank;
+      return winningsOf(b.playerId) - winningsOf(a.playerId);
+    });
   }
 
   // Scoreboard controls bar (rounds toggle for all Flip7; sort toggle host-only)
@@ -862,6 +876,11 @@ function _saveSortState(roomCode, gameId) {
 }
 
 function _restoreSortState(roomCode, gameId) {
+  // Reset to defaults first: sort state is module-level and per-game, so without
+  // this a game with no saved state would inherit the previous game's mode/order.
+  _playerSortMode = 'score';
+  _customPlayerOrder = null;
+  _roundsDisplayMode = 'last3';
   try {
     const raw = localStorage.getItem(_sortKey(roomCode, gameId));
     if (!raw) return;

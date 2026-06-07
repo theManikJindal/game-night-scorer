@@ -275,11 +275,13 @@ function _computeGameSpecificStats(game, gameModule, rounds, playerIds, snapshot
   return stats;
 }
 
-// Compute per-player Jua net for a single finished Flip 7 game with Jua enabled.
+// Compute per-player Jua net for a single Flip 7 game with Jua enabled.
 // Returns a Map<playerId, net> or null if the game isn't a qualifying Jua game.
-function _computeJuaNets(game) {
+// By default only finished games qualify; pass { requireFinished: false } to get
+// the running (projected) net for an in-progress game.
+function _computeJuaNets(game, { requireFinished = true } = {}) {
   const cfg = game.config || {};
-  if (!cfg.jua || game.status !== 'finished') return null;
+  if (!cfg.jua || (requireFinished && game.status !== 'finished')) return null;
 
   const buyIn = cfg.juaBuyIn || 30;
   const firstSaveAmt = cfg.juaFirstSave || 5;
@@ -384,4 +386,29 @@ function _computeNightWinnings(allGames) {
   if (players.length === 0) return null;
   players.sort((a, b) => b.net - a.net);
   return { players };
+}
+
+// Cumulative per-player Jua net across the given games. Each game is run through
+// the same per-game calculation used everywhere else (non-qualifying games — not
+// Flip 7, Jua off, or not finished — contribute nothing). Returns a
+// Map<playerId, net>; players with no qualifying games are simply absent.
+export function cumulativeJuaNets(games) {
+  const totals = new Map();
+  (games || []).forEach((game) => {
+    if (!game || game.type !== 'flip7') return;
+    const nets = _computeJuaNets(game);
+    if (!nets) return;
+    nets.forEach((net, pid) => {
+      totals.set(pid, (totals.get(pid) || 0) + net);
+    });
+  });
+  return totals;
+}
+
+// Running (projected) per-player Jua net for an in-progress Flip 7 game, using
+// its committed totals, saves and fines. Returns a Map<playerId, net> (empty for
+// non-qualifying games). Use this to factor the current game into a live tiebreak.
+export function liveJuaNets(game) {
+  if (!game || game.type !== 'flip7') return new Map();
+  return _computeJuaNets(game, { requireFinished: false }) || new Map();
 }
