@@ -6,17 +6,17 @@ import * as fb from '../firebase.js';
 import * as router from '../router.js';
 import * as toast from '../components/toast.js';
 import * as bottomNav from '../components/bottom-nav.js';
+import { screenBody } from '../components/layout.js';
 
 export function mount(container) {
   // Hide nav on home
   bottomNav.hide();
   document.getElementById('top-bar').style.display = 'none';
 
-  container.innerHTML = `
-    <div class="flex flex-col items-center justify-center h-full px-6">
+  container.innerHTML = screenBody(`
       <!-- Logo -->
       <div class="text-center mb-16">
-        <h1 class="font-headline font-black uppercase tracking-tighter text-4xl leading-none">GAME<br>NIGHT<br>SCORER</h1>
+        <h1 class="font-headline font-extrabold uppercase tracking-tighter text-4xl leading-none">GAME<br>NIGHT<br>SCORER</h1>
       </div>
 
       <!-- Create -->
@@ -30,7 +30,7 @@ export function mount(container) {
       <!-- Divider -->
       <div class="flex items-center w-full max-w-xs mb-12">
         <div class="flex-1 border-t border-outline-variant"></div>
-        <span class="px-4 font-mono text-[10px] uppercase tracking-widest text-outline">OR JOIN</span>
+        <span class="px-4 font-mono text-[0.625rem] uppercase tracking-widest text-outline">OR JOIN</span>
         <div class="flex-1 border-t border-outline-variant"></div>
       </div>
 
@@ -55,9 +55,8 @@ export function mount(container) {
       </div>
 
       <!-- Firebase status -->
-      <div id="fb-status" class="mt-12 font-mono text-[10px] text-outline uppercase tracking-widest"></div>
-    </div>
-  `;
+      <div id="fb-status" class="mt-12 font-mono text-[0.625rem] text-outline uppercase tracking-widest"></div>
+  `, { center: true });
 
   // Firebase status
   const statusEl = container.querySelector('#fb-status');

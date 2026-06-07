@@ -36,13 +36,13 @@ export function mount(container, params = {}) {
   const games = getAllGames();
 
   container.innerHTML = `
-    <div class="p-6 pb-32">
+    <div class="screen-body pb-32">
       <div class="flex justify-between items-end mb-6">
         <div>
-          <p class="font-mono text-[10px] uppercase tracking-widest text-outline mb-1">CHOOSE YOUR GAME</p>
-          <h2 class="font-headline font-black text-2xl uppercase tracking-tight">What are we playing?</h2>
+          <p class="font-mono text-[0.625rem] uppercase tracking-widest text-outline mb-1">CHOOSE YOUR GAME</p>
+          <h2 class="font-headline font-extrabold text-2xl uppercase tracking-tight">What are we playing?</h2>
         </div>
-        <span class="font-mono text-[10px] border border-outline px-2 py-1 uppercase">${playerCount} Players</span>
+        <span class="font-mono text-[0.625rem] border border-outline px-2 py-1 uppercase">${playerCount} Players</span>
       </div>
 
       <!-- Game Cards -->
@@ -53,10 +53,10 @@ export function mount(container, params = {}) {
             <div class="game-card-group" data-group-id="${escapeHTML(g.id)}">
               <button class="game-card w-full text-left bg-surface-container-lowest border border-outline p-6 transition-all ${compatible ? 'hover:bg-surface-container group' : 'opacity-40 cursor-not-allowed'}" data-id="${escapeHTML(g.id)}" ${!compatible ? 'disabled' : ''}>
                 <div class="flex justify-between items-start mb-3">
-                  <span class="font-mono text-[10px] text-outline tracking-widest uppercase">${g.minPlayers}-${g.maxPlayers} PLAYERS / ${g.winMode === 'highest_total' ? 'HIGHEST WINS' : 'LOWEST WINS'}</span>
+                  <span class="font-mono text-[0.625rem] text-outline tracking-widest uppercase">${g.minPlayers}-${g.maxPlayers} PLAYERS / ${g.winMode === 'highest_total' ? 'HIGHEST WINS' : 'LOWEST WINS'}</span>
                   <div class="game-check w-7 h-7 border-2 border-outline-variant flex items-center justify-center transition-all"></div>
                 </div>
-                <h3 class="font-headline font-black text-3xl uppercase tracking-tighter mb-2 group-hover:text-secondary transition-colors">${g.label}</h3>
+                <h3 class="font-headline font-extrabold text-3xl uppercase tracking-tighter mb-2 group-hover:text-secondary transition-colors">${g.label}</h3>
                 <p class="text-on-surface-variant text-sm leading-relaxed">${g.description}</p>
               </button>
             </div>
@@ -145,7 +145,7 @@ function _renderConfig(container) {
   configDiv.className = 'game-config-inline';
   configDiv.innerHTML = `
     <div class="bg-surface-container-lowest border border-outline border-t-0 p-4">
-      <p class="font-mono text-[10px] uppercase tracking-widest text-outline mb-4">GAME SETTINGS</p>
+      <p class="font-mono text-[0.625rem] uppercase tracking-widest text-outline mb-4">GAME SETTINGS</p>
       ${game.configFields.map((f) => _renderConfigField(game, f, playerCount)).join('')}
     </div>
   `;
@@ -275,7 +275,7 @@ function _renderConfigField(game, f, playerCount) {
     <div class="flex items-center justify-between py-3 border-b border-outline-variant last:border-0">
       <div>
         <label for="config-${f.key}" class="font-headline font-bold text-sm uppercase block">${f.label}</label>
-        <span id="config-desc-${f.key}" class="font-mono text-[9px] text-outline">MIN ${f.min || 1}</span>
+        <span id="config-desc-${f.key}" class="font-mono text-[0.5625rem] text-outline">MIN ${f.min || 1}</span>
       </div>
       <input
         type="number"

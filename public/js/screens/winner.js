@@ -59,14 +59,14 @@ export function mount(container, params = {}) {
   container.innerHTML = `
     <div class="h-full flex flex-col bg-background text-on-surface">
       <!-- Hero -->
-      <main class="flex-1 flex flex-col items-center overflow-y-auto min-h-0 px-6 pt-6 ${juaOn ? 'pb-28' : 'pb-8'}">
+      <main class="screen-body flex-1 flex flex-col items-center overflow-y-auto min-h-0 ${juaOn ? 'pb-28' : 'pb-8'}">
         <div id="hero-section" role="button" tabindex="0" aria-label="Celebrate again" title="Tap to celebrate again" class="text-center w-full max-w-sm mx-auto mb-12 cursor-pointer select-none">
           <div class="flex items-center justify-center gap-2 mb-4">
-            <span aria-hidden="true" class="material-symbols-outlined text-[40px]" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-[2.5rem]" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
             <span class="font-headline text-xl uppercase tracking-widest opacity-80">WINNER</span>
           </div>
 
-          <h1 class="confetti-text font-headline font-black text-7xl uppercase tracking-tight leading-none truncate">${escapeHTML(winner.name || 'UNKNOWN')}</h1>
+          <h1 class="confetti-text font-headline font-extrabold text-7xl uppercase tracking-tight leading-none truncate">${escapeHTML(winner.name || 'UNKNOWN')}</h1>
         </div>
 
         <!-- Standings -->
@@ -335,7 +335,7 @@ export function mount(container, params = {}) {
                   <tr class="border-b border-outline">
                     <th class="${headCls} pl-4 pr-3 text-center" style="${rankColStyle}">Rank</th>
                     <th class="${headCls} pr-3 text-left">Player</th>
-                    <th id="winnings-col-header" role="button" tabindex="0" aria-label="Expand all breakdowns" class="${headCls} pl-3 pr-4 text-right cursor-pointer select-none whitespace-nowrap"><span class="material-symbols-outlined" style="font-size:20px;vertical-align:middle;line-height:1">unfold_more</span> <span class="col-header-label">Winnings</span></th>
+                    <th id="winnings-col-header" role="button" tabindex="0" aria-label="Expand all breakdowns" class="${headCls} pl-3 pr-4 text-right cursor-pointer select-none whitespace-nowrap"><span class="material-symbols-outlined" style="font-size:1.25rem;vertical-align:middle;line-height:1">unfold_more</span> <span class="col-header-label">Winnings</span></th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-outline-variant">${winningsRows}</tbody>

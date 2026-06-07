@@ -42,7 +42,7 @@ export function mount(container, params = {}) {
   _lastTopBarHost = state.isHost();
 
   container.innerHTML = `
-    <div id="lobby-content" class="p-6 pb-8 flex flex-col">
+    <div id="lobby-content" class="screen-body pb-8 flex flex-col">
 
       <!-- Viewer status panel (spectator only) -->
       <div id="viewer-label" class="mb-6" style="display:none"></div>
@@ -123,13 +123,6 @@ export function mount(container, params = {}) {
           <span aria-hidden="true" class="material-symbols-outlined text-lg">arrow_forward</span>
         </button>
       </div>
-
-      <!-- Become Host (visible to all when no host) -->
-      <div id="become-host-section" style="display:none">
-        <button id="btn-become-host" class="w-full bg-surface-container-lowest border border-outline py-3 font-headline font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors">
-          BECOME HOST
-        </button>
-      </div>
     </div>
   `;
 
@@ -166,14 +159,6 @@ function _bindEvents(container, roomCode) {
   // Go to game (spectators, once the host has started a game) — jumps to the board.
   container.querySelector('#btn-go-to-game')?.addEventListener('click', () => {
     router.navigate('dashboard', { roomCode });
-  });
-
-  container.querySelector('#btn-become-host')?.addEventListener('click', async () => {
-    try {
-      await fb.claimHost(roomCode);
-    } catch (e) {
-      toast.show('Failed to claim host');
-    }
   });
 
   // Allow-spectators-to-score toggle (host only). Flip optimistically, persist to
@@ -380,9 +365,6 @@ function _render(container, roomCode) {
     _lastTopBarHost = isHost;
   }
 
-  const becomeHostSection = container.querySelector('#become-host-section');
-  if (becomeHostSection) becomeHostSection.style.display = (!lobby.hostKey && !isHost) ? 'block' : 'none';
-
   // Spectators get a "Go to game" shortcut to the live board once the host has
   // a game in progress.
   const spectatorGameSection = container.querySelector('#spectator-game-section');
@@ -428,8 +410,7 @@ function _render(container, roomCode) {
   const showStart = isHost && !isPlaying && !nightLocked;
   const showFinished = isHost && isGameFinished;
   const showGoToGame = !isHost && isPlaying && gameInProgress;
-  const showBecomeHost = !lobby.hostKey && !isHost;
-  const anyAction = showSpectatorToggle || showStart || showFinished || nightLocked || showGoToGame || showBecomeHost;
+  const anyAction = showSpectatorToggle || showStart || showFinished || nightLocked || showGoToGame;
   const actionsBar = container.querySelector('#lobby-actions');
   if (actionsBar) actionsBar.style.display = anyAction ? 'flex' : 'none';
   // Reserve scroll space so the player grid clears the docked bar when shown.
@@ -480,14 +461,14 @@ function _renderPlayers(container, players, isHost, roomCode, gameInProgress = f
     .map((p) => {
       const color = accentColor(p.accentIndex);
       return `
-        <div class="relative bg-surface-container-lowest border border-outline">
-          <div class="h-1.5 w-full" style="background:${color}"></div>
-          <div class="p-4 ${canRemove ? 'pr-9' : ''}">
-            <p class="font-headline font-extrabold text-xl uppercase truncate">${escapeHTML(p.name)}</p>
+        <div class="relative flex items-stretch bg-surface-container-lowest border border-outline">
+          <div class="self-stretch aspect-square shrink-0 border border-outline" style="background:${color}"></div>
+          <div class="flex-1 min-w-0 flex items-center py-2.5 px-3 ${canRemove ? 'pr-9' : ''}">
+            <p class="font-headline font-extrabold text-lg uppercase truncate">${escapeHTML(p.name)}</p>
           </div>
           ${canRemove ? `
-            <button class="player-remove absolute top-2.5 right-1.5 p-1 hover:bg-surface-container-high transition-colors" data-id="${escapeHTML(p.id)}" title="Remove" aria-label="Remove ${escapeHTML(p.name)}">
-              <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-error">close</span>
+            <button class="player-remove absolute top-1/2 -translate-y-1/2 right-1.5 p-1 hover:bg-surface-container-high transition-colors" data-id="${escapeHTML(p.id)}" title="Remove" aria-label="Remove ${escapeHTML(p.name)}">
+              <span aria-hidden="true" class="material-symbols-outlined text-[1.25rem] text-error">close</span>
             </button>
           ` : ''}
         </div>
@@ -645,7 +626,7 @@ function _showJuaPrizeSplitModal(container, roomCode, gameId, config, prevPlayer
 
       <div class="px-5 pb-5 flex gap-3 border-t border-outline-variant pt-4">
         <button id="prize-split-cancel" type="button" aria-label="Cancel" class="btn-secondary flex-none flex items-center justify-center self-stretch" style="padding:0;background:#f4f4f2">
-          <span class="material-symbols-outlined" style="font-size:20px">close</span>
+          <span class="material-symbols-outlined" style="font-size:1.25rem">close</span>
         </button>
         <button id="prize-split-confirm" type="button" class="btn-primary" style="flex:3">ADD PLAYER</button>
       </div>

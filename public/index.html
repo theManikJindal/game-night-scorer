@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Game Night Scorer</title>
 
 <!-- Fonts -->
@@ -81,16 +81,16 @@ tailwind.config = {
 
 <body class="bg-surface-container-low text-on-surface font-body antialiased selection:bg-secondary selection:text-white">
   <!-- App Shell -->
-  <div id="app" class="relative max-w-[430px] mx-auto h-[100dvh] flex flex-col overflow-hidden">
+  <div id="app" class="app-col relative h-[100dvh] flex flex-col overflow-hidden">
 
     <!-- Top Bar -->
     <header id="top-bar" class="bg-surface-container-low border-b border-outline sticky top-0 z-50 flex justify-between items-center w-full px-6 py-4 shrink-0" style="display:none">
       <div class="flex items-center gap-3">
-        <button id="top-bar-back" aria-label="Go back" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1 hidden" style="font-size:24px">arrow_back</button>
-        <h1 id="top-bar-title" class="font-headline font-black uppercase tracking-tighter text-lg">GAME NIGHT</h1>
+        <button id="top-bar-back" aria-label="Go back" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1 hidden" style="font-size:1.5rem">arrow_back</button>
+        <h1 id="top-bar-title" class="font-headline font-extrabold uppercase tracking-tighter text-2xl">GAME NIGHT</h1>
       </div>
       <div class="flex items-center gap-2">
-        <button id="top-bar-sound" aria-label="Play sound" class="material-symbols-outlined text-outline p-1 transition-transform duration-100 ease-out active:scale-90 focus:outline-none" style="font-size:24px">volume_up</button>
+        <button id="top-bar-sound" aria-label="Play sound" class="material-symbols-outlined text-outline p-1 transition-transform duration-100 ease-out active:scale-90 focus:outline-none" style="font-size:1.5rem">volume_up</button>
         <div id="top-bar-actions" class="flex items-center gap-2"></div>
       </div>
     </header>
@@ -101,7 +101,7 @@ tailwind.config = {
     </main>
 
     <!-- Bottom Navigation (fixed) -->
-    <nav id="bottom-nav" class="bg-surface-container-low border-t border-outline flex justify-around items-end px-4 z-50 fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto" style="display:none">
+    <nav id="bottom-nav" class="app-col bg-surface-container-low border-t border-outline flex justify-around items-end px-4 z-50 fixed bottom-0 left-0 right-0" style="display:none">
       <!-- Rendered by bottom-nav.js -->
     </nav>
   </div>
@@ -109,8 +109,13 @@ tailwind.config = {
   <!-- Host Menu Overlay (lives outside screen container so re-renders don't kill it) -->
   <div id="host-menu-overlay" class="fixed inset-0 z-[200]" role="dialog" aria-modal="true" aria-label="Host Menu" style="display:none">
     <div id="host-menu-backdrop" class="absolute inset-0" style="background:rgba(0,0,0,0.15)"></div>
-    <!-- Items are rendered dynamically by host-menu.js (conditional on game/night state). -->
-    <div id="host-menu-items" class="absolute top-14 right-4 max-w-[250px] w-[220px] bg-surface-container-low border border-outline" style="max-width:min(250px, calc(100vw - 32px))"></div>
+    <!-- Column-aligned positioning context: keeps the menu hanging off the
+         trigger at the top-right of the app column, not the viewport corner
+         (which detaches on wide/tablet screens). -->
+    <div class="app-col relative h-full pointer-events-none">
+      <!-- Items are rendered dynamically by host-menu.js (conditional on game/night state). -->
+      <div id="host-menu-items" class="absolute top-14 right-4 max-w-[250px] w-[220px] bg-surface-container-low border border-outline pointer-events-auto" style="max-width:min(250px, calc(100vw - 32px))"></div>
+    </div>
   </div>
 
   <!-- Toast Container -->

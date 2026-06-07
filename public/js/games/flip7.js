@@ -143,7 +143,7 @@ export default {
               <div class="p-4 flex items-center gap-3">
                 <div class="flex-1 min-w-0">
                   <p class="font-headline font-extrabold text-sm uppercase truncate">${escapeHTML(p.name || pid)}</p>
-                  <p class="font-mono text-[10px] text-outline">${currentTotal} PTS</p>
+                  <p class="font-mono text-[0.625rem] text-outline">${currentTotal} PTS</p>
                 </div>
                 <div class="flex items-center gap-2">
                   <input
@@ -163,7 +163,7 @@ export default {
                     data-field="flip7"
                     aria-pressed="false"
                     aria-label="Flip 7 for ${escapeHTML(p.name || pid)}"
-                    class="flip7-toggle min-w-[44px] min-h-[44px] px-2 border font-mono text-[10px] uppercase tracking-widest transition-colors border-outline-variant text-outline hover:border-primary inline-flex items-center justify-center gap-1"
+                    class="flip7-toggle min-w-[44px] min-h-[44px] px-2 border font-mono text-[0.625rem] uppercase tracking-widest transition-colors border-outline-variant text-outline hover:border-primary inline-flex items-center justify-center gap-1"
                   ><span class="flip7-label">🔥</span></button>
                   <button
                     type="button"
@@ -181,7 +181,7 @@ export default {
 
       <!-- Live Preview -->
       <div id="live-preview" class="mt-4 bg-surface-container-high border border-outline p-4">
-        <p class="font-mono text-[10px] uppercase tracking-widest text-outline mb-3">PREVIEW</p>
+        <p class="font-mono text-[0.625rem] uppercase tracking-widest text-outline mb-3">PREVIEW</p>
         <div id="preview-rows" class="space-y-1"></div>
       </div>
     `;
@@ -229,11 +229,11 @@ export default {
         <p class="text-sm leading-relaxed">Push your luck by flipping cards. Accumulate points each round. First player to reach the target score wins.</p>
         <div class="grid grid-cols-2 gap-3 mt-4">
           <div class="p-3 bg-surface-container-low border border-outline-variant">
-            <p class="font-mono text-[10px] uppercase text-outline mb-1">Default Target</p>
+            <p class="font-mono text-[0.625rem] uppercase text-outline mb-1">Default Target</p>
             <p class="font-mono text-lg font-bold">200 PTS</p>
           </div>
           <div class="p-3 bg-surface-container-low border border-outline-variant">
-            <p class="font-mono text-[10px] uppercase text-outline mb-1">Players</p>
+            <p class="font-mono text-[0.625rem] uppercase text-outline mb-1">Players</p>
             <p class="font-mono text-lg font-bold">2-20</p>
           </div>
         </div>

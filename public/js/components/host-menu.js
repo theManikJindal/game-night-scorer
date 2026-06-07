@@ -10,6 +10,7 @@ import * as router from '../router.js';
 import * as toast from './toast.js';
 import * as cache from '../cache.js';
 import * as qrModal from './qr-modal.js';
+import * as hostTransfer from './host-transfer.js';
 import { getGame } from '../games/registry.js';
 
 let _bound = false;
@@ -44,12 +45,8 @@ export function init() {
     if (action === 'end-game') {
       await _endGameWithWinner(roomCode);
       router.navigate('lobby', { roomCode });
-    } else if (action === 'change-host') {
-      try {
-        await fb.releaseHost(roomCode);
-      } catch {
-        toast.show('Failed to release host');
-      }
+    } else if (action === 'become-host') {
+      hostTransfer.requestBecomeHost(roomCode);
     } else if (action === 'call-night') {
       await _callItANight(roomCode);
     } else if (action === 'exit-lobby') {
@@ -66,7 +63,7 @@ export function init() {
 }
 
 // Build the overflow menu items. Shared across the Lobby, Game, and Recap tabs so
-// the host sees the same menu everywhere. All items use the negative (error) variant.
+// everyone sees the same menu everywhere. All items use the negative (error) variant.
 // "End Game" only shows while a game is actually in progress; "Call it a Night" only
 // once stats are tracked and a game has finished (and the night isn't already locked).
 function _renderMenuItems() {
@@ -84,10 +81,12 @@ function _renderMenuItems() {
     const canCallNight = trackStats && hasFinishedGame && lobby.status !== 'night-ended' && !gameActive;
 
     if (gameActive) items.push({ action: 'end-game', icon: 'stop_circle', label: 'End Game' });
-    items.push({ action: 'change-host', icon: 'swap_horiz', label: 'Change Host' });
     if (canCallNight) items.push({ action: 'call-night', icon: 'bedtime', label: 'Call it a Night' });
+  } else {
+    // Spectators can request to take over as host (via the request → approve flow).
+    items.push({ action: 'become-host', icon: 'swap_horiz', label: 'Become Host' });
   }
-  // Spectators only ever get "Exit Lobby" (the trigger is shown to them in Flip 7).
+  // Everyone gets "Exit Lobby".
   items.push({ action: 'exit-lobby', icon: 'logout', label: 'Exit Lobby' });
 
   const base = 'host-menu-action w-full text-left px-4 py-3 font-headline font-bold text-xs uppercase tracking-widest text-error hover:bg-surface-container-high transition-colors flex items-center gap-3';
@@ -156,10 +155,9 @@ export function hide() {
  * Shows: room code + (host: 3-dot menu | viewer: exit button)
  */
 export function renderTopBarActions(roomCode) {
-  const isHost = state.isHost();
-  // Flip 7 spectators get the overflow menu too — their only option is "Exit Lobby".
-  const isFlip7 = state.currentGame()?.type === 'flip7';
-  const showMenu = isHost || isFlip7;
+  // Everyone gets the overflow menu now: the host has game/night controls, and
+  // spectators have "Become Host" + "Exit Lobby".
+  const showMenu = true;
   const actionsEl = document.getElementById('top-bar-actions');
   if (!actionsEl) return;
 
@@ -168,9 +166,9 @@ export function renderTopBarActions(roomCode) {
       class="font-mono text-xs text-outline border border-outline px-2 py-1 hover:bg-surface-container-high transition-colors">
       ${roomCode}
     </button>
-    <button id="btn-qr-share" aria-label="Show QR code" title="Share room QR" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1 ml-1" style="font-size:22px">qr_code_2</button>
+    <button id="btn-qr-share" aria-label="Show QR code" title="Share room QR" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1 ml-1" style="font-size:1.375rem">qr_code_2</button>
     ${showMenu
-      ? `<button id="btn-host-menu-trigger" aria-label="Open menu" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1 ml-1" style="font-size:22px">more_vert</button>`
+      ? `<button id="btn-host-menu-trigger" aria-label="Open menu" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1 ml-1" style="font-size:1.375rem">more_vert</button>`
       : ''
     }
   `;

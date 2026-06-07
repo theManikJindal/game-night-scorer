@@ -88,7 +88,7 @@ export function mount(container, params = {}) {
   // Bottom nav
   bottomNav.show('dashboard');
 
-  container.innerHTML = `<div id="dash-content" class="p-6 pb-8 flex flex-col min-h-full"></div>`;
+  container.innerHTML = `<div id="dash-content" class="screen-body pb-8 flex flex-col min-h-full"></div>`;
 
   // Kick off grayscale spritesheet conversion as early as possible
   _initGrayscaleSprite();
@@ -490,7 +490,7 @@ function _render(container, roomCode) {
     if (isFlip7Host) {
       const roundDropdownItems = roundKeys.map((key, i) => `
         <button type="button" data-round-key="${key}"
-          style="display:block;width:100%;text-align:left;padding:10px 16px;font-family:monospace;font-size:16px;text-transform:uppercase;letter-spacing:0.05em;color:#000;background:${key === _editLastRoundKey ? '#e8e8e6' : '#f4f4f2'};border:none;${i < roundKeys.length - 1 ? 'border-bottom:1px solid #c6c6c6;' : ''}cursor:pointer;white-space:nowrap"
+          style="display:block;width:100%;text-align:left;padding:10px 16px;font-family:monospace;font-size:1rem;text-transform:uppercase;letter-spacing:0.05em;color:#000;background:${key === _editLastRoundKey ? '#e8e8e6' : '#f4f4f2'};border:none;${i < roundKeys.length - 1 ? 'border-bottom:1px solid #c6c6c6;' : ''}cursor:pointer;white-space:nowrap"
           class="round-dropdown-item">
           Round ${i + 1}
         </button>
@@ -505,7 +505,7 @@ function _render(container, roomCode) {
           ${_editScoresMode ? `
             <button id="btn-edit-cancel" aria-label="Cancel" title="Cancel"
               class="shrink-0 self-stretch bg-surface-container-low border border-outline flex items-center justify-center transition-colors hover:bg-surface-container-high">
-              <span class="material-symbols-outlined" style="font-size:24px" aria-hidden="true">delete</span>
+              <span class="material-symbols-outlined" style="font-size:1.5rem" aria-hidden="true">delete</span>
             </button>
             <button id="btn-edit-save"
               class="flex-1 btn-primary flex items-center justify-center">
@@ -963,7 +963,7 @@ function _openFlip7Drawer(container, roomCode, playerId, snapshot, game) {
 
   // Build all 20 grid cells using the spritesheet
   const cardBtns = _F7_CARD_DATA.map((c) => {
-    if (c.empty) return `<div class="flex items-center justify-center" style="aspect-ratio:130/204"><button type="button" id="flip7-done-btn" aria-label="Done" class="flex items-center justify-center border-2 border-primary text-primary hover:bg-primary hover:text-on-primary transition-colors" style="width:75%;aspect-ratio:130/204;box-shadow:0 3px 5px -1px rgba(0,0,0,0.18)"><span aria-hidden="true" class="material-symbols-outlined" style="font-size:28px;font-variation-settings:'wght' 700">check</span></button></div>`;
+    if (c.empty) return `<div class="flex items-center justify-center" style="aspect-ratio:130/204"><button type="button" id="flip7-done-btn" aria-label="Done" class="flex items-center justify-center border-2 border-primary text-primary hover:bg-primary hover:text-on-primary transition-colors" style="width:75%;aspect-ratio:130/204;box-shadow:0 3px 5px -1px rgba(0,0,0,0.18)"><span aria-hidden="true" class="material-symbols-outlined" style="font-size:1.75rem;font-variation-settings:'wght' 700">check</span></button></div>`;
     const bg = _cardSpriteBg(c.col, c.row);
     const cardStyle = `aspect-ratio:130/204;border-radius:6px;box-shadow:0 3px 5px -1px rgba(0,0,0,0.18);${bg}`;
     if (c.id) {
@@ -974,14 +974,14 @@ function _openFlip7Drawer(container, roomCode, playerId, snapshot, game) {
 
   _flip7DrawerEl.innerHTML = `
     <div id="flip7-drawer-backdrop" class="absolute inset-0 bg-black/50"></div>
-    <div id="flip7-drawer-sheet" class="relative w-full bg-surface-container-lowest border-t-2 border-outline" style="max-height:85vh;display:flex;flex-direction:column;">
+    <div id="flip7-drawer-sheet" class="app-col relative w-full bg-surface-container-lowest border-t-2 border-outline" style="max-height:85vh;display:flex;flex-direction:column;">
       <!-- Sticky header -->
       <div class="shrink-0">
         <div class="accent-bar" style="background:${color}"></div>
         <div class="relative flex justify-center pt-3 pb-1">
           <div class="w-10 h-1 rounded-full bg-outline-variant"></div>
           <button id="flip7-arrange-toggle" type="button" aria-pressed="${_flip7DragMode}"
-            class="absolute right-4 top-1.5 font-mono text-[9px] uppercase tracking-widest flex items-center gap-0.5 transition-colors ${_flip7DragMode ? 'text-on-surface' : 'text-outline hover:text-on-surface'}"
+            class="absolute right-4 top-1.5 font-mono text-[0.5625rem] uppercase tracking-widest flex items-center gap-0.5 transition-colors ${_flip7DragMode ? 'text-on-surface' : 'text-outline hover:text-on-surface'}"
             style="display:none">
             <span class="material-symbols-outlined text-sm" aria-hidden="true">drag_indicator</span>
             ${_flip7DragMode ? 'DONE' : 'ARRANGE'}
@@ -994,7 +994,7 @@ function _openFlip7Drawer(container, roomCode, playerId, snapshot, game) {
               <p id="flip7-header-score" class="font-mono text-4xl font-bold leading-none">0</p>
               <span id="flip7-header-emoji" class="text-4xl leading-none" style="display:none">🔥</span>
             </div>
-            <p id="flip7-header-label" class="font-mono text-[9px] text-outline mt-0.5 uppercase tracking-widest">THIS ROUND</p>
+            <p id="flip7-header-label" class="font-mono text-[0.5625rem] text-outline mt-0.5 uppercase tracking-widest">THIS ROUND</p>
           </div>
         </div>
         ${game.config?.jua ? `
@@ -1058,9 +1058,9 @@ function _debugPauseBeforeCAS(label) {
     el.setAttribute('role', 'dialog');
     el.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,0.45);backdrop-filter:blur(2px);';
     el.innerHTML = `
-      <div style="font-family:monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#fff;background:#000;padding:6px 10px;border:1px solid #fff;">PAUSED BEFORE CAS</div>
-      <button type="button" id="gns-debug-resume" style="font-family:monospace;font-weight:700;font-size:18px;letter-spacing:0.08em;text-transform:uppercase;color:#000;background:#fff;border:2px solid #000;padding:18px 28px;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,0.4);">▶ RESUME CAS</button>
-      <div style="font-family:monospace;font-size:12px;color:#fff;background:rgba(0,0,0,0.6);padding:6px 10px;max-width:80vw;text-align:center;">${escapeHTML(String(label || ''))}</div>
+      <div style="font-family:monospace;font-size:0.6875rem;letter-spacing:0.1em;text-transform:uppercase;color:#fff;background:#000;padding:6px 10px;border:1px solid #fff;">PAUSED BEFORE CAS</div>
+      <button type="button" id="gns-debug-resume" style="font-family:monospace;font-weight:700;font-size:1.125rem;letter-spacing:0.08em;text-transform:uppercase;color:#000;background:#fff;border:2px solid #000;padding:18px 28px;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,0.4);">▶ RESUME CAS</button>
+      <div style="font-family:monospace;font-size:0.75rem;color:#fff;background:rgba(0,0,0,0.6);padding:6px 10px;max-width:80vw;text-align:center;">${escapeHTML(String(label || ''))}</div>
     `;
     el.querySelector('#gns-debug-resume').addEventListener('click', () => {
       el.remove();
@@ -1262,7 +1262,7 @@ function _bindDrawerEvents(container, roomCode, playerId, draftSnapshot) {
     if (!arrangeBtn) return;
     arrangeBtn.setAttribute('aria-pressed', String(_flip7DragMode));
     arrangeBtn.innerHTML = `<span class="material-symbols-outlined text-sm" aria-hidden="true">drag_indicator</span>${_flip7DragMode ? 'DONE' : 'ARRANGE'}`;
-    arrangeBtn.className = `absolute right-4 top-1.5 font-mono text-[9px] uppercase tracking-widest flex items-center gap-0.5 transition-colors ${_flip7DragMode ? 'text-on-surface' : 'text-outline hover:text-on-surface'}`;
+    arrangeBtn.className = `absolute right-4 top-1.5 font-mono text-[0.5625rem] uppercase tracking-widest flex items-center gap-0.5 transition-colors ${_flip7DragMode ? 'text-on-surface' : 'text-outline hover:text-on-surface'}`;
   }
 
   arrangeBtn?.addEventListener('click', () => {
@@ -1530,7 +1530,7 @@ function _openAdjustDrawer(container, roomCode, game, pid, snapshot) {
 
   _editScoresEl.innerHTML = `
     <div id="adjust-backdrop" class="absolute inset-0 bg-black/50"></div>
-    <div class="relative w-full bg-surface-container-lowest border-t-2 border-outline">
+    <div class="app-col relative w-full bg-surface-container-lowest border-t-2 border-outline">
       <div class="h-[6px]" style="background:${color}"></div>
       <div class="flex justify-center pt-3 pb-1">
         <div class="w-10 h-1 rounded-full bg-outline-variant"></div>
@@ -1557,7 +1557,7 @@ function _openAdjustDrawer(container, roomCode, game, pid, snapshot) {
           class="score-input flex-1" placeholder="0" min="0"
           value="${initialAmount || ''}">
         <button id="adj-apply-btn" class="btn-primary shrink-0 flex items-center justify-center" style="width:48px;height:48px;padding:0">
-          <span aria-hidden="true" class="material-symbols-outlined" style="font-size:20px;font-variation-settings:'FILL' 1">check</span>
+          <span aria-hidden="true" class="material-symbols-outlined" style="font-size:1.25rem;font-variation-settings:'FILL' 1">check</span>
         </button>
       </div>
     </div>
@@ -1636,10 +1636,10 @@ function _openJuaFineCounter(pid, game, roomCode) {
 
   _juaModalEl.innerHTML = `
     <div id="jua-modal-backdrop" class="absolute inset-0 bg-black/50"></div>
-    <div class="relative w-full bg-surface-container-lowest border-t-2 border-outline">
+    <div class="app-col relative w-full bg-surface-container-lowest border-t-2 border-outline">
       <div class="flex justify-center pt-3 pb-1"><div class="w-10 h-1 rounded-full bg-outline-variant"></div></div>
       <div class="px-4 pb-3 border-b border-outline-variant">
-        <p class="font-mono text-[9px] uppercase tracking-widest text-outline mb-1">RECORD FINES</p>
+        <p class="font-mono text-[0.5625rem] uppercase tracking-widest text-outline mb-1">RECORD FINES</p>
         <div class="flex items-center justify-between gap-3">
           <p class="font-headline font-extrabold text-xl uppercase truncate">${name}</p>
           <p id="jua-fine-rupees" class="font-mono text-2xl font-bold shrink-0">₹${_totalRupees()}</p>
