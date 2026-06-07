@@ -135,7 +135,7 @@ body {
 .nav-item span:last-child {
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -145,7 +145,7 @@ body {
   background: #2f3130;
   color: #f1f1ef;
   font-family: 'Space Mono', monospace;
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 10px 16px;
   border: 1px solid #777777;
   pointer-events: all;
@@ -232,7 +232,7 @@ input[type="number"] {
   border: 0;
   border-bottom: 2px solid #000000;
   font-family: 'Space Mono', monospace;
-  font-size: 24px;
+  font-size: 1.5rem;
   text-align: center;
   width: 80px;
   padding: 4px 0;
@@ -258,7 +258,7 @@ input[type="number"] {
   cursor: pointer;
   transition: opacity 0.15s;
   width: 100%;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .btn-primary:hover { opacity: 0.9; }
@@ -277,7 +277,7 @@ input[type="number"] {
   border: 1px solid #000000;
   cursor: pointer;
   transition: background 0.15s;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .btn-secondary:hover { background: #e8e8e6; }
@@ -297,7 +297,7 @@ input[type="number"] {
   cursor: pointer;
   transition: background 0.15s;
   width: 100%;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .btn-danger:hover { background: rgba(186, 26, 26, 0.08); }
@@ -363,7 +363,7 @@ input[type="number"] {
   letter-spacing: 0.2em;
   padding: 10px 16px;
   text-align: center;
-  font-size: 12px;
+  font-size: 0.75rem;
   animation: pulse-banner 2s ease-in-out infinite;
 }
 

@@ -90,7 +90,7 @@ export default {
     return `
       <!-- Papayoo Suit Picker -->
       <div class="bg-surface-container-lowest border border-outline p-4 mb-4">
-        <p class="font-mono text-[10px] uppercase tracking-widest text-outline mb-3">PAPAYOO SUIT THIS ROUND</p>
+        <p class="font-mono text-[0.625rem] uppercase tracking-widest text-outline mb-3">PAPAYOO SUIT THIS ROUND</p>
         <div class="grid grid-cols-4 gap-2">
           ${SUITS.map((suit) => `
             <button
@@ -98,7 +98,7 @@ export default {
               class="suit-btn flex flex-col items-center gap-1 p-3 border border-outline-variant hover:border-primary transition-colors"
             >
               <span aria-hidden="true" class="material-symbols-outlined text-xl">${suit.icon}</span>
-              <span class="font-mono text-[9px] uppercase">${suit.label}</span>
+              <span class="font-mono text-[0.5625rem] uppercase">${suit.label}</span>
             </button>
           `).join('')}
         </div>
@@ -116,7 +116,7 @@ export default {
               <div class="p-4 flex items-center gap-3">
                 <div class="flex-1 min-w-0">
                   <p class="font-headline font-extrabold text-sm uppercase truncate">${escapeHTML(p.name || pid)}</p>
-                  <p class="font-mono text-[10px] text-outline">${currentTotal} PTS</p>
+                  <p class="font-mono text-[0.625rem] text-outline">${currentTotal} PTS</p>
                 </div>
                 <input
                   type="number"
@@ -144,7 +144,7 @@ export default {
 
       <!-- Running Total -->
       <div class="mt-4 bg-surface-container-high border border-outline p-4 flex justify-between items-center">
-        <span class="font-mono text-[10px] uppercase tracking-widest">PENALTY SUM</span>
+        <span class="font-mono text-[0.625rem] uppercase tracking-widest">PENALTY SUM</span>
         <div class="flex items-center gap-2">
           <span id="penalty-sum" class="font-mono text-xl font-bold">0</span>
           <span class="font-mono text-sm text-outline">/ 250</span>
@@ -152,7 +152,7 @@ export default {
       </div>
 
       <!-- Round info -->
-      <p class="font-mono text-[10px] text-outline text-center mt-2 uppercase">
+      <p class="font-mono text-[0.625rem] text-outline text-center mt-2 uppercase">
         ROUND ${rounds.length + 1} OF ${game.config?.roundLimit || 5}
       </p>
     `;
@@ -203,11 +203,11 @@ export default {
         <p class="text-sm leading-relaxed">Avoid collecting penalty cards. The player with the <span class="font-bold">lowest total</span> after all rounds wins.</p>
         <div class="grid grid-cols-2 gap-3 mt-4">
           <div class="p-3 bg-surface-container-low border border-outline-variant">
-            <p class="font-mono text-[10px] uppercase text-outline mb-1">Penalties Per Round</p>
+            <p class="font-mono text-[0.625rem] uppercase text-outline mb-1">Penalties Per Round</p>
             <p class="font-mono text-lg font-bold">250 PTS</p>
           </div>
           <div class="p-3 bg-surface-container-low border border-outline-variant">
-            <p class="font-mono text-[10px] uppercase text-outline mb-1">Players</p>
+            <p class="font-mono text-[0.625rem] uppercase text-outline mb-1">Players</p>
             <p class="font-mono text-lg font-bold">3-8</p>
           </div>
         </div>

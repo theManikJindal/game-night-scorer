@@ -27,7 +27,7 @@ export function show(url, roomCode) {
       </div>
       <div class="w-full px-4 pb-4 flex gap-3 border-t border-outline-variant pt-4">
         <button id="qr-close" type="button" aria-label="Close" class="btn-secondary flex-none flex items-center justify-center self-stretch" style="padding:0;background:#f4f4f2">
-          <span class="material-symbols-outlined" style="font-size:20px">close</span>
+          <span class="material-symbols-outlined" style="font-size:1.25rem">close</span>
         </button>
         <button id="qr-copy" type="button" class="btn-primary" style="flex:3">COPY LINK</button>
       </div>

@@ -30,7 +30,7 @@ export function mount(container) {
       <!-- Divider -->
       <div class="flex items-center w-full max-w-xs mb-12">
         <div class="flex-1 border-t border-outline-variant"></div>
-        <span class="px-4 font-mono text-[10px] uppercase tracking-widest text-outline">OR JOIN</span>
+        <span class="px-4 font-mono text-[0.625rem] uppercase tracking-widest text-outline">OR JOIN</span>
         <div class="flex-1 border-t border-outline-variant"></div>
       </div>
 
@@ -55,7 +55,7 @@ export function mount(container) {
       </div>
 
       <!-- Firebase status -->
-      <div id="fb-status" class="mt-12 font-mono text-[10px] text-outline uppercase tracking-widest"></div>
+      <div id="fb-status" class="mt-12 font-mono text-[0.625rem] text-outline uppercase tracking-widest"></div>
   `, { center: true });
 
   // Firebase status

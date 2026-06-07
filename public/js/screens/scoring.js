@@ -78,18 +78,18 @@ function _render(container, roomCode) {
       <!-- Round Header -->
       <div class="flex justify-between items-end mb-4">
         <div>
-          <p class="font-mono text-[10px] uppercase tracking-widest text-outline">ENTER SCORES</p>
+          <p class="font-mono text-[0.625rem] uppercase tracking-widest text-outline">ENTER SCORES</p>
           <h2 class="font-headline font-black text-2xl uppercase tracking-tight">Round ${roundNum}</h2>
         </div>
         <div class="flex items-center gap-3">
-          <button id="btn-reset-form" type="button" class="font-mono text-[10px] uppercase tracking-widest text-outline hover:text-on-surface underline-offset-2 hover:underline transition-colors">RESET FORM</button>
-          <span class="font-mono text-[10px] border border-outline px-2 py-1 uppercase">${gameModule.label}</span>
+          <button id="btn-reset-form" type="button" class="font-mono text-[0.625rem] uppercase tracking-widest text-outline hover:text-on-surface underline-offset-2 hover:underline transition-colors">RESET FORM</button>
+          <span class="font-mono text-[0.625rem] border border-outline px-2 py-1 uppercase">${gameModule.label}</span>
         </div>
       </div>
 
       ${gameModule.scoringHint ? `
       <details class="mb-4 border border-outline-variant bg-surface-container-lowest">
-        <summary class="cursor-pointer select-none px-4 py-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-outline hover:bg-surface-container-high transition-colors list-none">
+        <summary class="cursor-pointer select-none px-4 py-2 flex items-center gap-2 font-mono text-[0.625rem] uppercase tracking-widest text-outline hover:bg-surface-container-high transition-colors list-none">
           <span class="material-symbols-outlined text-sm" aria-hidden="true">info</span>
           HOW SCORING WORKS
         </summary>
@@ -100,8 +100,8 @@ function _render(container, roomCode) {
       <!-- Mini Standings -->
       <div class="bg-surface-container-lowest border border-outline mb-6 overflow-hidden">
         <div class="flex items-center justify-between px-4 py-2 bg-surface-container-high border-b border-outline">
-          <span class="font-mono text-[10px] uppercase tracking-widest text-outline">STANDINGS</span>
-          <span class="font-mono text-[10px] text-outline">RD ${rounds.length}${game.type === 'papayoo' ? '/' + (game.config?.roundLimit || 5) : ''}</span>
+          <span class="font-mono text-[0.625rem] uppercase tracking-widest text-outline">STANDINGS</span>
+          <span class="font-mono text-[0.625rem] text-outline">RD ${rounds.length}${game.type === 'papayoo' ? '/' + (game.config?.roundLimit || 5) : ''}</span>
         </div>
         <div class="divide-y divide-outline-variant">
           ${standings.map((s) => {
@@ -111,7 +111,7 @@ function _render(container, roomCode) {
             return `
               <div class="flex items-center px-4 py-2 gap-3">
                 <div class="w-1 self-stretch shrink-0" style="background:${color}"></div>
-                <span class="font-mono text-[10px] text-outline w-6">${rankLabel}</span>
+                <span class="font-mono text-[0.625rem] text-outline w-6">${rankLabel}</span>
                 <span class="font-headline font-bold text-xs uppercase flex-1 truncate">${escapeHTML(p.name || s.playerId)}</span>
                 <span class="font-mono text-sm font-bold ${s.rank === 1 ? 'text-secondary' : ''}">${s.total}</span>
               </div>
@@ -129,7 +129,7 @@ function _render(container, roomCode) {
           CONFIRM ROUND
           <span aria-hidden="true" class="material-symbols-outlined text-lg">check</span>
         </button>
-        <div id="validation-error" class="font-mono text-[10px] text-error text-center uppercase" style="display:none"></div>
+        <div id="validation-error" class="font-mono text-[0.625rem] text-error text-center uppercase" style="display:none"></div>
       </div>
     </div>
   `;
@@ -307,7 +307,7 @@ async function _submitRound(container, roomCode, initialGame, gameModule) {
   fb.watchConnection((connected) => {
     if (!btn.isConnected) return; // btn removed from DOM (navigated away)
     if (!connected) {
-      btn.innerHTML = '<span class="font-mono text-[10px] uppercase tracking-widest">Waiting for connection…</span>';
+      btn.innerHTML = '<span class="font-mono text-[0.625rem] uppercase tracking-widest">Waiting for connection…</span>';
     } else {
       btn.innerHTML = '<div class="spinner mx-auto"></div>';
     }

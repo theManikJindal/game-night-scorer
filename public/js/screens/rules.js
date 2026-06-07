@@ -39,7 +39,7 @@ export function mount(container, params = {}) {
       <!-- Hero -->
       <section class="border-l-4 border-primary pl-6 mb-12">
         <h2 class="text-4xl font-headline font-black uppercase tracking-tight leading-[0.9] mb-3">${gameModule.label}<br>RULEBOOK</h2>
-        <p class="font-mono text-[10px] uppercase tracking-[0.2em] text-outline">QUICK REFERENCE / V1</p>
+        <p class="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-outline">QUICK REFERENCE / V1</p>
       </section>
 
       <!-- Rules Content -->

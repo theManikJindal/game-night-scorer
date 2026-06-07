@@ -82,14 +82,14 @@ export function confirmRoundDialog(playerScores, options = {}) {
         <label id="crd-nosave-row" class="flex items-center justify-center gap-3 px-5 pt-1 pb-1 cursor-pointer select-none">
           <input id="crd-nosave" type="checkbox" class="peer sr-only">
           <span aria-hidden="true" class="shrink-0 w-5 h-5 border border-primary bg-surface-container-lowest peer-checked:bg-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-focus-visible:ring-offset-1 flex items-center justify-center">
-            <span class="material-symbols-outlined" style="font-size:16px;color:#fff;font-variation-settings:'wght' 700">check</span>
+            <span class="material-symbols-outlined" style="font-size:1rem;color:#fff;font-variation-settings:'wght' 700">check</span>
           </span>
           <span class="font-headline font-bold text-sm uppercase">No saves this round</span>
         </label>
         ` : ''}
         <div class="px-5 pb-5 pt-3 flex gap-2">
           <button id="crd-cancel" type="button" aria-label="Cancel" class="btn-secondary flex-none flex items-center justify-center self-stretch" style="padding:0;background:#f4f4f2">
-            <span class="material-symbols-outlined" style="font-size:20px">close</span>
+            <span class="material-symbols-outlined" style="font-size:1.25rem">close</span>
           </button>
           <button id="crd-confirm" type="button" class="btn-primary" style="flex:3" ${requireNoSaveAck ? 'disabled' : ''}>CONFIRM</button>
         </div>
@@ -164,7 +164,7 @@ export function confirmSaveDialog(changes) {
         </div>
         <div class="px-5 pb-5 pt-3 flex gap-2">
           <button id="csd-cancel" type="button" aria-label="Cancel" class="btn-secondary flex-none flex items-center justify-center self-stretch" style="padding:0;background:#f4f4f2">
-            <span class="material-symbols-outlined" style="font-size:20px">close</span>
+            <span class="material-symbols-outlined" style="font-size:1.25rem">close</span>
           </button>
           <button id="csd-confirm" type="button" class="btn-primary" style="flex:3">SAVE</button>
         </div>

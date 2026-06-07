@@ -487,7 +487,7 @@ function _renderPlayers(container, players, isHost, roomCode, gameInProgress = f
           </div>
           ${canRemove ? `
             <button class="player-remove absolute top-2.5 right-1.5 p-1 hover:bg-surface-container-high transition-colors" data-id="${escapeHTML(p.id)}" title="Remove" aria-label="Remove ${escapeHTML(p.name)}">
-              <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-error">close</span>
+              <span aria-hidden="true" class="material-symbols-outlined text-[1.25rem] text-error">close</span>
             </button>
           ` : ''}
         </div>
@@ -645,7 +645,7 @@ function _showJuaPrizeSplitModal(container, roomCode, gameId, config, prevPlayer
 
       <div class="px-5 pb-5 flex gap-3 border-t border-outline-variant pt-4">
         <button id="prize-split-cancel" type="button" aria-label="Cancel" class="btn-secondary flex-none flex items-center justify-center self-stretch" style="padding:0;background:#f4f4f2">
-          <span class="material-symbols-outlined" style="font-size:20px">close</span>
+          <span class="material-symbols-outlined" style="font-size:1.25rem">close</span>
         </button>
         <button id="prize-split-confirm" type="button" class="btn-primary" style="flex:3">ADD PLAYER</button>
       </div>

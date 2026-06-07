@@ -64,7 +64,7 @@ export function mount(container, params = {}) {
   html += `
     <section class="border-l-4 border-primary pl-6 mb-8">
       <h2 class="text-3xl font-headline font-black uppercase tracking-tight leading-[0.9] mb-2">NIGHT<br>RECAP</h2>
-      <p class="font-mono text-[10px] uppercase tracking-[0.2em] text-outline">${stats.totalGames} GAME${stats.totalGames > 1 ? 'S' : ''} / ${stats.totalRounds} ROUNDS</p>
+      <p class="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-outline">${stats.totalGames} GAME${stats.totalGames > 1 ? 'S' : ''} / ${stats.totalRounds} ROUNDS</p>
     </section>
   `;
 
@@ -78,8 +78,8 @@ export function mount(container, params = {}) {
         </h3>
         <div class="border border-outline overflow-hidden">
           <div class="grid grid-cols-12 bg-surface-container-high border-b border-outline px-4 py-2">
-            <div class="col-span-8 font-mono text-[10px] uppercase tracking-widest text-outline">PLAYER</div>
-            <div class="col-span-4 font-mono text-[10px] uppercase tracking-widest text-outline text-right">NIGHT NET</div>
+            <div class="col-span-8 font-mono text-[0.625rem] uppercase tracking-widest text-outline">PLAYER</div>
+            <div class="col-span-4 font-mono text-[0.625rem] uppercase tracking-widest text-outline text-right">NIGHT NET</div>
           </div>
           ${stats.winnings.players.map((p, i) => {
             const color = accentColor(p.accentIndex);
@@ -91,8 +91,8 @@ export function mount(container, params = {}) {
               const v = parseFloat(gn.toFixed(1));
               const s = `${v >= 0 ? '+' : ''}${Number.isInteger(v) ? v : v}`;
               const c = v >= 0 ? 'text-secondary' : 'text-error';
-              return `<span class="font-mono text-[9px] ${c}">${s}</span>`;
-            }).join('<span class="font-mono text-[9px] text-outline mx-0.5">·</span>');
+              return `<span class="font-mono text-[0.5625rem] ${c}">${s}</span>`;
+            }).join('<span class="font-mono text-[0.5625rem] text-outline mx-0.5">·</span>');
             return `
               <div class="grid grid-cols-12 items-center px-4 py-3 border-b border-outline-variant last:border-0 ${bgClass}">
                 <div class="col-span-8 flex items-center gap-2">
@@ -120,7 +120,7 @@ export function mount(container, params = {}) {
         <div class="bg-primary text-on-primary p-6 mb-8">
           <div class="flex items-center gap-2 mb-2">
             <span aria-hidden="true" class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
-            <span class="font-mono text-[10px] uppercase tracking-widest opacity-80">MOST VALUABLE PLAYER</span>
+            <span class="font-mono text-[0.625rem] uppercase tracking-widest opacity-80">MOST VALUABLE PLAYER</span>
           </div>
           <h3 class="font-headline font-black text-3xl uppercase tracking-tight">${escapeHTML(mvp.name)}</h3>
           <p class="font-mono text-sm opacity-80 mt-1">${mvp.gamesWon} WIN${mvp.gamesWon > 1 ? 'S' : ''} / ${mvp.gamesPlayed} GAME${mvp.gamesPlayed > 1 ? 'S' : ''}</p>
@@ -138,10 +138,10 @@ export function mount(container, params = {}) {
       </h3>
       <div class="border border-outline overflow-hidden">
         <div class="grid grid-cols-12 bg-surface-container-high border-b border-outline px-4 py-2">
-          <div class="col-span-5 font-mono text-[10px] uppercase tracking-widest text-outline">PLAYER</div>
-          <div class="col-span-2 font-mono text-[10px] uppercase tracking-widest text-outline text-center">PLAYED</div>
-          <div class="col-span-2 font-mono text-[10px] uppercase tracking-widest text-outline text-center">WON</div>
-          <div class="col-span-3 font-mono text-[10px] uppercase tracking-widest text-outline text-right">BEST</div>
+          <div class="col-span-5 font-mono text-[0.625rem] uppercase tracking-widest text-outline">PLAYER</div>
+          <div class="col-span-2 font-mono text-[0.625rem] uppercase tracking-widest text-outline text-center">PLAYED</div>
+          <div class="col-span-2 font-mono text-[0.625rem] uppercase tracking-widest text-outline text-center">WON</div>
+          <div class="col-span-3 font-mono text-[0.625rem] uppercase tracking-widest text-outline text-right">BEST</div>
         </div>
         ${stats.overall.map((p, i) => {
           const color = accentColor(p.accentIndex);
@@ -151,7 +151,7 @@ export function mount(container, params = {}) {
               <div class="col-span-5 flex items-center gap-2">
                 <div class="w-1 h-6" style="background:${color}"></div>
                 <span class="font-headline font-bold text-xs uppercase truncate">${escapeHTML(p.name)}</span>
-                ${stats.mvpId === p.playerId ? '<span class="font-mono text-[7px] bg-primary text-on-primary px-1 py-0.5 uppercase">MVP</span>' : ''}
+                ${stats.mvpId === p.playerId ? '<span class="font-mono text-[0.4375rem] bg-primary text-on-primary px-1 py-0.5 uppercase">MVP</span>' : ''}
               </div>
               <div class="col-span-2 font-mono text-sm text-center">${p.gamesPlayed}</div>
               <div class="col-span-2 font-mono text-sm text-center font-bold ${p.gamesWon > 0 ? 'text-secondary' : ''}">${p.gamesWon}</div>
@@ -171,7 +171,7 @@ export function mount(container, params = {}) {
           <span class="font-mono text-sm text-outline border border-outline px-2 py-1">${String(gi + 1).padStart(2, '0')}</span>
           <div>
             <h3 class="text-xl font-headline font-bold uppercase tracking-tight">${game.label}</h3>
-            <p class="font-mono text-[10px] text-outline uppercase">${game.roundCount} ROUNDS</p>
+            <p class="font-mono text-[0.625rem] text-outline uppercase">${game.roundCount} ROUNDS</p>
           </div>
         </div>
     `;
@@ -183,7 +183,7 @@ export function mount(container, params = {}) {
         <div class="bg-surface-container-high border border-outline p-3 mb-3 flex items-center gap-3">
           <span aria-hidden="true" class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
           <span class="font-headline font-bold text-sm uppercase">${escapeHTML(w.name)}</span>
-          <span class="font-mono text-[10px] text-outline ml-auto">WINNER</span>
+          <span class="font-mono text-[0.625rem] text-outline ml-auto">WINNER</span>
         </div>
       `;
     } else if (game.isAbandoned) {
@@ -191,7 +191,7 @@ export function mount(container, params = {}) {
         <div class="bg-surface-container-high border border-outline-variant p-3 mb-3 flex items-center gap-3">
           <span aria-hidden="true" class="material-symbols-outlined text-sm text-outline">cancel</span>
           <span class="font-headline font-bold text-sm uppercase text-outline">INCONCLUSIVE</span>
-          <span class="font-mono text-[10px] text-outline ml-auto">NO WINNER</span>
+          <span class="font-mono text-[0.625rem] text-outline ml-auto">NO WINNER</span>
         </div>
       `;
     }
@@ -208,7 +208,7 @@ export function mount(container, params = {}) {
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-2">
                 <span class="font-headline font-extrabold text-sm uppercase">${escapeHTML(ps.name)}</span>
-                <span class="font-mono text-[10px] text-outline">${_ordinal(ps.finalRank)}</span>
+                <span class="font-mono text-[0.625rem] text-outline">${_ordinal(ps.finalRank)}</span>
               </div>
               <span class="font-mono text-lg font-bold ${ps.isWinner ? 'text-secondary' : ''}">${ps.totalScore}</span>
             </div>
@@ -254,7 +254,7 @@ export function mount(container, params = {}) {
     // starts a fresh game night from the landing screen.
     html += `
       <div class="mt-8 text-center">
-        <p class="font-mono text-[10px] text-outline uppercase">Night locked${isHost ? ' — start a new night from the home screen' : ' by host'}</p>
+        <p class="font-mono text-[0.625rem] text-outline uppercase">Night locked${isHost ? ' — start a new night from the home screen' : ' by host'}</p>
       </div>
     `;
   } else {
@@ -287,5 +287,5 @@ function _ordinal(n) {
 
 function _statPill(label, value, highlight = false) {
   const bg = highlight ? 'bg-primary text-on-primary' : 'bg-surface-container-high';
-  return `<span class="font-mono text-[9px] ${bg} px-2 py-0.5 uppercase">${label}: ${value}</span>`;
+  return `<span class="font-mono text-[0.5625rem] ${bg} px-2 py-0.5 uppercase">${label}: ${value}</span>`;
 }

@@ -164,7 +164,7 @@ export default {
     return `
       <!-- Caller Selection -->
       <div class="bg-surface-container-lowest border border-outline p-4 mb-4">
-        <p class="font-mono text-[10px] uppercase tracking-widest text-outline mb-3">WHO CALLED CABO?</p>
+        <p class="font-mono text-[0.625rem] uppercase tracking-widest text-outline mb-3">WHO CALLED CABO?</p>
         <div class="flex flex-wrap gap-2">
           ${playerIds.map((pid) => {
             const p = snapshot[pid] || {};
@@ -183,7 +183,7 @@ export default {
       <div class="bg-surface-container-lowest border border-outline p-4 mb-4 flex items-center justify-between">
         <div>
           <p class="font-headline font-bold text-sm uppercase">Kamikaze</p>
-          <p class="font-mono text-[10px] text-outline">Two 12s + Two 13s = 0 pts, others get 50</p>
+          <p class="font-mono text-[0.625rem] text-outline">Two 12s + Two 13s = 0 pts, others get 50</p>
         </div>
         <button id="kamikaze-toggle" role="switch" aria-checked="false" aria-label="Kamikaze toggle" class="w-12 h-7 border border-outline bg-surface-container-high transition-colors relative">
           <div class="absolute top-0.5 left-0.5 w-5.5 h-5.5 bg-outline transition-transform" style="width:22px;height:22px"></div>
@@ -202,7 +202,7 @@ export default {
               <div class="p-4 flex items-center gap-3">
                 <div class="flex-1 min-w-0">
                   <p class="font-headline font-extrabold text-sm uppercase truncate">${escapeHTML(p.name || pid)}</p>
-                  <p class="font-mono text-[10px] text-outline">${currentTotal} PTS${currentTotal === 50 ? ' (RESET)' : ''}</p>
+                  <p class="font-mono text-[0.625rem] text-outline">${currentTotal} PTS${currentTotal === 50 ? ' (RESET)' : ''}</p>
                 </div>
                 <input
                   type="number"
@@ -230,8 +230,8 @@ export default {
 
       <!-- Cabo scoring reference -->
       <div class="mt-4 bg-surface-container-high border border-outline p-4">
-        <p class="font-mono text-[10px] uppercase tracking-widest text-outline mb-2">SCORING REFERENCE</p>
-        <div class="space-y-1 font-mono text-[11px]">
+        <p class="font-mono text-[0.625rem] uppercase tracking-widest text-outline mb-2">SCORING REFERENCE</p>
+        <div class="space-y-1 font-mono text-[0.6875rem]">
           <div class="flex justify-between"><span class="text-on-surface-variant">Caller has lowest</span><span class="font-bold">0 pts</span></div>
           <div class="flex justify-between"><span class="text-on-surface-variant">Caller doesn't have lowest</span><span class="font-bold">Sum + 10</span></div>
           <div class="flex justify-between"><span class="text-on-surface-variant">Everyone else</span><span class="font-bold">Card sum</span></div>
@@ -303,11 +303,11 @@ export default {
         <p class="text-sm leading-relaxed">Memorize, swap, and peek at your cards to minimize your hand total. Call "Cabo" when you think you have the lowest score.</p>
         <div class="grid grid-cols-2 gap-3 mt-4">
           <div class="p-3 bg-surface-container-low border border-outline-variant">
-            <p class="font-mono text-[10px] uppercase text-outline mb-1">Bust Threshold</p>
+            <p class="font-mono text-[0.625rem] uppercase text-outline mb-1">Bust Threshold</p>
             <p class="font-mono text-lg font-bold">100 PTS</p>
           </div>
           <div class="p-3 bg-surface-container-low border border-outline-variant">
-            <p class="font-mono text-[10px] uppercase text-outline mb-1">Players</p>
+            <p class="font-mono text-[0.625rem] uppercase text-outline mb-1">Players</p>
             <p class="font-mono text-lg font-bold">2-10</p>
           </div>
         </div>
