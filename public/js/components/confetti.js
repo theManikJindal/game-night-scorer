@@ -34,6 +34,24 @@ function _reducedMotion() {
   return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+// Celebration fanfare played whenever the rain starts. A single reused Audio
+// element means a retrigger replaces the previous play rather than stacking
+// overlapping sounds.
+const FANFARES = ['sounds/trumpet-fanfare.mp3'];
+let _fanfare = null;
+
+function _playFanfare() {
+  try {
+    if (!_fanfare) _fanfare = new Audio();
+    _fanfare.pause();
+    _fanfare.src = FANFARES[(Math.random() * FANFARES.length) | 0];
+    _fanfare.currentTime = 0;
+    // Autoplay may be blocked without a user gesture (e.g. a reload that lands
+    // straight on the winner's confetti) — that's fine, just stay silent then.
+    _fanfare.play().catch(() => { /* autoplay blocked / file missing — ignore */ });
+  } catch (_) { /* Audio unavailable — ignore */ }
+}
+
 function _resize() {
   if (!_canvas) return;
   const dpr = window.devicePixelRatio || 1;
@@ -166,6 +184,7 @@ function _run() {
 // fall. Calling again retriggers it (and restarts the countdown).
 export function startRain({ rate = 0.5, duration = 5000 } = {}) {
   if (_reducedMotion()) return;
+  _playFanfare();
   _ensureCanvas();
   _rate = rate;
   // Restart the auto-stop countdown on every call (so taps retrigger/extend it).

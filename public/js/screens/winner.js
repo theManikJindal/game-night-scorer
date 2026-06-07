@@ -59,11 +59,11 @@ export function mount(container, params = {}) {
       <main class="flex-1 flex flex-col items-center overflow-y-auto min-h-0 px-6 pt-6 ${juaOn ? 'pb-28' : 'pb-8'}">
         <div id="hero-section" role="button" tabindex="0" aria-label="Celebrate again" title="Tap to celebrate again" class="text-center w-full max-w-sm mx-auto mb-12 cursor-pointer select-none">
           <div class="flex items-center justify-center gap-2 mb-4">
-            <span aria-hidden="true" class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
-            <span class="font-headline text-lg uppercase tracking-widest opacity-80">WINNER</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-[40px]" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+            <span class="font-headline text-xl uppercase tracking-widest opacity-80">WINNER</span>
           </div>
 
-          <h1 class="font-headline font-black text-5xl uppercase tracking-tight leading-none truncate">${escapeHTML(winner.name || 'UNKNOWN')}</h1>
+          <h1 class="font-headline font-black text-7xl uppercase tracking-tight leading-none truncate">${escapeHTML(winner.name || 'UNKNOWN')}</h1>
         </div>
 
         <!-- Standings -->
