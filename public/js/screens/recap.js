@@ -9,7 +9,7 @@ import * as hostMenu from '../components/host-menu.js';
 import * as confetti from '../components/confetti.js';
 import { computeNightStats } from '../stats.js';
 import { escapeHTML } from '../utils.js';
-import { buildSingleGameTables, wireSingleGameTables } from './single-game-tables.js';
+import { buildSingleGameTables, wireSingleGameTables, winnerNamesHTML } from './single-game-tables.js';
 
 // Backdrop for the View dropdown, reparented onto document.body while open.
 // Tracked at module scope so unmount can tear it down if the screen changes
@@ -364,26 +364,8 @@ function _winnerHero(winners, isJua) {
   const label = isJua
     ? (plural ? 'HIGH ROLLERS' : 'HIGH ROLLER')
     : (plural ? 'CHAMPIONS' : 'CHAMPION');
-  const nameFont = 'font-headline font-extrabold uppercase tracking-tight leading-none';
-  let namesHTML;
-  if (winners.length === 1) {
-    // Single winner uses the same text-7xl name as the Winner screen's hero.
-    namesHTML = `<h1 class="confetti-text ${nameFont} text-7xl truncate">${escapeHTML(winners[0].name)}</h1>`;
-  } else {
-    // One continuous gradient across all the names: confetti-text on the grid,
-    // so its single clipped background image slides through every name as a unit
-    // (the children inherit the transparent text fill). Always two names per row;
-    // with an odd count the last one spans both columns so it sits centered on
-    // its own row.
-    const size = winners.length === 2 ? 'text-4xl' : 'text-3xl';
-    const odd = winners.length % 2 === 1;
-    namesHTML = `<div class="confetti-text grid grid-cols-2 gap-x-2 gap-y-3">${winners
-      .map((w, i) => {
-        const span = (odd && i === winners.length - 1) ? ' col-span-2' : '';
-        return `<span class="${nameFont} ${size} text-center truncate min-w-0${span}">${escapeHTML(w.name)}</span>`;
-      })
-      .join('')}</div>`;
-  }
+  // Shared layout: text-7xl for a lone winner, a two-per-row grid for ties.
+  const namesHTML = winnerNamesHTML(winners.map((w) => w.name));
   // Ties get more breathing room between the label/icon row and the names row.
   const rowGap = plural ? 'mb-8' : 'mb-4';
   return `

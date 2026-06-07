@@ -7,8 +7,8 @@ import * as router from '../router.js';
 import * as bottomNav from '../components/bottom-nav.js';
 import * as hostMenu from '../components/host-menu.js';
 import * as confetti from '../components/confetti.js';
-import { escapeHTML } from '../utils.js';
-import { buildSingleGameTables, wireSingleGameTables } from './single-game-tables.js';
+import { getGame } from '../games/registry.js';
+import { buildSingleGameTables, wireSingleGameTables, winnerNamesHTML } from './single-game-tables.js';
 
 // Tracks which game's winner we've already auto-celebrated, so returning to the
 // winner tab for the same game doesn't re-fire the confetti.
@@ -46,7 +46,16 @@ export function mount(container, params = {}) {
 
   const snapshot = game.playerSnapshot || {};
   const juaOn = !!(game.config?.jua);
-  const winner = snapshot[game.winner] || {};
+
+  // A Flip 7 game can finish tied at the top (checkEnd just records leaders[0]
+  // as game.winner, leaving the result for this screen to surface). Show *all*
+  // the rank-1 players — the same tied-winner layout the Recap hero uses.
+  const standings = getGame(game.type).deriveStandings(game.totals || {}, game.playerIds || []);
+  const winnerIds = standings.filter((s) => s.rank === 1).map((s) => s.playerId);
+  // Fall back to the stored single winner if standings can't be derived.
+  const ids = winnerIds.length ? winnerIds : (game.winner ? [game.winner] : []);
+  const winnerNames = ids.map((id) => snapshot[id]?.name || 'UNKNOWN');
+  const plural = winnerNames.length > 1;
 
   // Scores/Winnings tables for this game. The prior-winnings tiebreak excludes
   // the shown (active) game so a player's own current result never sorts itself.
@@ -61,12 +70,12 @@ export function mount(container, params = {}) {
       <!-- Hero -->
       <main class="screen-body flex-1 flex flex-col items-center overflow-y-auto min-h-0 ${juaOn ? 'pb-28' : 'pb-8'}">
         <div id="hero-section" role="button" tabindex="0" aria-label="Celebrate again" title="Tap to celebrate again" class="text-center w-full max-w-sm mx-auto mb-12 cursor-pointer select-none">
-          <div class="flex items-center justify-center gap-2 mb-4">
+          <div class="flex items-center justify-center gap-2 ${plural ? 'mb-8' : 'mb-4'}">
             <span aria-hidden="true" class="material-symbols-outlined text-[2.5rem]" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
-            <span class="font-headline text-xl uppercase tracking-widest opacity-80">WINNER</span>
+            <span class="font-headline text-xl uppercase tracking-widest opacity-80">${plural ? 'WINNERS' : 'WINNER'}</span>
           </div>
 
-          <h1 class="confetti-text font-headline font-extrabold text-7xl uppercase tracking-tight leading-none truncate">${escapeHTML(winner.name || 'UNKNOWN')}</h1>
+          ${winnerNamesHTML(winnerNames)}
         </div>
 
         <!-- Standings -->

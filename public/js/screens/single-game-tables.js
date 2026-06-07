@@ -16,6 +16,26 @@ import { cumulativeJuaNets } from '../stats.js';
 import { getGame } from '../games/registry.js';
 import { escapeHTML } from '../utils.js';
 
+// Shared winner-name layout, used by both the Winner screen hero and the Recap
+// "tonight's winner(s)" hero so they always match. A single winner gets the big
+// text-7xl name; 2+ tied winners lay out two-per-row at text-4xl, and with an
+// odd count the last name spans both columns so it sits centered on its own row.
+// One continuous confetti-text gradient slides across all the names: the effect
+// lives on the wrapper, and the names inherit its transparent text fill.
+const _WINNER_NAME_FONT = 'font-headline font-extrabold uppercase tracking-tight leading-none';
+export function winnerNamesHTML(names) {
+  if (names.length === 1) {
+    return `<h1 class="confetti-text ${_WINNER_NAME_FONT} text-7xl uppercase truncate">${escapeHTML(names[0])}</h1>`;
+  }
+  const odd = names.length % 2 === 1;
+  return `<div class="confetti-text grid grid-cols-2 gap-x-2 gap-y-3">${names
+    .map((name, i) => {
+      const span = (odd && i === names.length - 1) ? ' col-span-2' : '';
+      return `<span class="${_WINNER_NAME_FONT} text-4xl text-center truncate min-w-0${span}">${escapeHTML(name)}</span>`;
+    })
+    .join('')}</div>`;
+}
+
 /**
  * Build the Scores/Winnings tables + tie card for one game.
  * @param {Object} game - full game (config, playerIds, playerSnapshot, totals, rounds, juaFines, winner, type, status)
