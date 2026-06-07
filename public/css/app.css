@@ -12,19 +12,9 @@
   --screen-pt: 24px;  /* top screen padding */
 }
 
-/* ── Root type size (two fixed steps, no fluid in-between) ──
-   The whole UI is rem-based, so this single knob scales all text together.
-   • Flagship-width phones and up (≥340px — Galaxy S ≈360, iPhone ≈390, Pixel
-     ≈412) use the browser's base size, normally 16px. We don't hardcode it,
-     so a user's custom base / minimum font-size is preserved.
-   • The iPhone-SE class (≤339px) drops one notch to 87.5% (= 14px on a default
-     16px base). 340px is the midpoint of the 320↔360 range, so each device
-     rounds to whichever step is closer.
-   Using % (relative to the user's base), not px, keeps both page zoom and a
-   custom base/min font-size working. */
-@media (max-width: 339.98px) {
-  html { font-size: 87.5%; }
-}
+/* Root font-size is left at the browser default (16px), so the rem-based UI
+   resolves to its intended px sizes. No width-based scaling — users can pinch-
+   or page-zoom if they want larger text. */
 
 /* The app column. Applied to #app and every full-width fixed element
    (#bottom-nav, .docked-bar, .modal-sheet) so they all line up exactly. */
