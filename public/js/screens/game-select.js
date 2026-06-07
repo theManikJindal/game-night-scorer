@@ -36,7 +36,7 @@ export function mount(container, params = {}) {
   const games = getAllGames();
 
   container.innerHTML = `
-    <div class="p-6 pb-32">
+    <div class="screen-body pb-32">
       <div class="flex justify-between items-end mb-6">
         <div>
           <p class="font-mono text-[10px] uppercase tracking-widest text-outline mb-1">CHOOSE YOUR GAME</p>

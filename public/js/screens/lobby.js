@@ -38,7 +38,7 @@ export function mount(container, params = {}) {
   _lastTopBarHost = state.isHost();
 
   container.innerHTML = `
-    <div id="lobby-content" class="p-6 pb-8 flex flex-col">
+    <div id="lobby-content" class="screen-body pb-8 flex flex-col">
 
       <!-- Viewer status panel (spectator only) -->
       <div id="viewer-label" class="mb-6" style="display:none"></div>

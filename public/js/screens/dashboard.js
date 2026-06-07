@@ -88,7 +88,7 @@ export function mount(container, params = {}) {
   // Bottom nav
   bottomNav.show('dashboard');
 
-  container.innerHTML = `<div id="dash-content" class="p-6 pb-8 flex flex-col min-h-full"></div>`;
+  container.innerHTML = `<div id="dash-content" class="screen-body pb-8 flex flex-col min-h-full"></div>`;
 
   // Kick off grayscale spritesheet conversion as early as possible
   _initGrayscaleSprite();

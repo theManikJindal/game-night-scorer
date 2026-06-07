@@ -49,7 +49,7 @@ export function unmount() {}
 function _render(container, roomCode) {
   const game = state.currentGame();
   if (!game) {
-    container.innerHTML = `<div class="p-6 text-center"><p class="text-on-surface-variant">No active game</p></div>`;
+    container.innerHTML = `<div class="screen-body screen-body--center text-center"><p class="text-on-surface-variant">No active game</p></div>`;
     return;
   }
 
@@ -74,7 +74,7 @@ function _render(container, roomCode) {
   const standings = gameModule.deriveStandings(totals, playerIds);
 
   container.innerHTML = `
-    <div class="p-6 pb-32">
+    <div class="screen-body pb-32">
       <!-- Round Header -->
       <div class="flex justify-between items-end mb-4">
         <div>

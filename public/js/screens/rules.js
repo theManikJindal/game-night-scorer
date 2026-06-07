@@ -27,7 +27,7 @@ export function mount(container, params = {}) {
 
   const game = state.currentGame();
   if (!game) {
-    container.innerHTML = `<div class="p-6 text-center"><p class="text-on-surface-variant">No active game</p></div>`;
+    container.innerHTML = `<div class="screen-body screen-body--center text-center"><p class="text-on-surface-variant">No active game</p></div>`;
     return;
   }
 
@@ -35,7 +35,7 @@ export function mount(container, params = {}) {
   if (!gameModule) return;
 
   container.innerHTML = `
-    <div class="p-6 pb-8">
+    <div class="screen-body pb-8">
       <!-- Hero -->
       <section class="border-l-4 border-primary pl-6 mb-12">
         <h2 class="text-4xl font-headline font-black uppercase tracking-tight leading-[0.9] mb-3">${gameModule.label}<br>RULEBOOK</h2>

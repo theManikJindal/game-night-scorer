@@ -57,7 +57,7 @@ export function mount(container, params = {}) {
   container.innerHTML = `
     <div class="h-full flex flex-col bg-background text-on-surface">
       <!-- Hero -->
-      <main class="flex-1 flex flex-col items-center overflow-y-auto min-h-0 px-6 pt-6 ${juaOn ? 'pb-28' : 'pb-8'}">
+      <main class="screen-body flex-1 flex flex-col items-center overflow-y-auto min-h-0 ${juaOn ? 'pb-28' : 'pb-8'}">
         <div id="hero-section" role="button" tabindex="0" aria-label="Celebrate again" title="Tap to celebrate again" class="text-center w-full max-w-sm mx-auto mb-12 cursor-pointer select-none">
           <div class="flex items-center justify-center gap-2 mb-4">
             <span aria-hidden="true" class="material-symbols-outlined text-[40px]" style="font-variation-settings: 'FILL' 1;">emoji_events</span>

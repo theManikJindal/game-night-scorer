@@ -45,7 +45,7 @@ export function mount(container, params = {}) {
   if (!stats) {
     const trackOn = !!lobby.trackStats;
     container.innerHTML = `
-      <div class="p-6 text-center py-20">
+      <div class="screen-body screen-body--center text-center">
         <span class="material-symbols-outlined text-5xl text-outline mb-4" aria-hidden="true">bar_chart</span>
         <p class="font-headline font-bold text-lg uppercase mb-2">No Stats Yet</p>
         <p class="font-body text-sm text-on-surface-variant max-w-xs mx-auto">${
@@ -58,7 +58,7 @@ export function mount(container, params = {}) {
     return;
   }
 
-  let html = '<div class="p-6 pb-12">';
+  let html = '<div class="screen-body pb-12">';
 
   // ── Night Overview Header ──
   html += `

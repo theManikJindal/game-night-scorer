@@ -2,6 +2,64 @@
    ANALOG ARCHITECT — App Styles
    ═══════════════════════════════════════════ */
 
+/* ── Layout tokens ──
+   Single source of truth for the app column + screen padding. The app is a
+   phone-first column; on wider (tablet) viewports we keep the same column width
+   and frame the surrounding "desk" so the empty space reads as intentional. */
+:root {
+  --app-max: 430px;   /* the phone column width — every fixed element aligns to this */
+  --screen-px: 24px;  /* horizontal screen padding (matches the old p-6 default) */
+  --screen-pt: 24px;  /* top screen padding */
+}
+
+/* The app column. Applied to #app and every full-width fixed element
+   (#bottom-nav, .docked-bar, .modal-sheet) so they all line up exactly. */
+.app-col {
+  max-width: var(--app-max);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Standardized screen root. Replaces the per-screen p-6 / px-6 grab-bag so the
+   left/right/top rhythm is identical on every screen. Bottom padding stays
+   per-screen (utility class) because each clears a different docked bar / nav. */
+.screen-body {
+  padding-top: var(--screen-pt);
+  padding-left: var(--screen-px);
+  padding-right: var(--screen-px);
+}
+.screen-body--center {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Tablet / large-viewport frame ──
+   The column stays phone-width; the surround gets a darker "desk" tone and the
+   column gets hairline side borders so it looks like a deliberate artifact
+   rather than a stranded strip. 1px borders + flat tone keep the no-shadow
+   Analog Architect mandate. Kicks in as soon as there's room beside the column. */
+@media (min-width: 480px) {
+  body {
+    background: #dadad8; /* surface-dim — the desk the column sits on */
+  }
+  #app {
+    border-left: 1px solid #c6c6c6;
+    border-right: 1px solid #c6c6c6;
+    background: #f4f4f2; /* keep the warm paper inside the frame */
+  }
+  /* Continue the frame's vertical lines across the fixed bottom bars so the
+     border is unbroken from top to bottom. They share .app-col, so the borders
+     land on exactly the same x as #app's. */
+  #bottom-nav,
+  .docked-bar {
+    border-left: 1px solid #c6c6c6;
+    border-right: 1px solid #c6c6c6;
+  }
+}
+
 /* Material Symbols */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -40,7 +98,7 @@ body {
   position: fixed;
   left: 0;
   right: 0;
-  max-width: 430px;
+  max-width: var(--app-max);
   margin-left: auto;
   margin-right: auto;
   bottom: calc(var(--nav-height, 80px) + env(safe-area-inset-bottom, 0px));
@@ -270,7 +328,7 @@ input[type="number"] {
   bottom: 0;
   left: 0;
   right: 0;
-  max-width: 430px;
+  max-width: var(--app-max);
   margin: 0 auto;
   background: #ffffff;
   border-top: 1px solid #777777;

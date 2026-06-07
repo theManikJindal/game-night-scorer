@@ -6,14 +6,14 @@ import * as fb from '../firebase.js';
 import * as router from '../router.js';
 import * as toast from '../components/toast.js';
 import * as bottomNav from '../components/bottom-nav.js';
+import { screenBody } from '../components/layout.js';
 
 export function mount(container) {
   // Hide nav on home
   bottomNav.hide();
   document.getElementById('top-bar').style.display = 'none';
 
-  container.innerHTML = `
-    <div class="flex flex-col items-center justify-center h-full px-6">
+  container.innerHTML = screenBody(`
       <!-- Logo -->
       <div class="text-center mb-16">
         <h1 class="font-headline font-black uppercase tracking-tighter text-4xl leading-none">GAME<br>NIGHT<br>SCORER</h1>
@@ -56,8 +56,7 @@ export function mount(container) {
 
       <!-- Firebase status -->
       <div id="fb-status" class="mt-12 font-mono text-[10px] text-outline uppercase tracking-widest"></div>
-    </div>
-  `;
+  `, { center: true });
 
   // Firebase status
   const statusEl = container.querySelector('#fb-status');
