@@ -15,6 +15,12 @@ import { buildSingleGameTables, wireSingleGameTables } from './single-game-table
 // while the dropdown is still open.
 let _backdropEl = null;
 
+// Live re-render subscription. Recap can stay mounted across a status change —
+// e.g. the host taps "Call it a Night" from the recap tab, which locks the night
+// but doesn't navigate (we're already here). Without this, the screen would show
+// a stale "active" recap and the action would look like it did nothing.
+let _unsubLobby = null;
+
 function _closeDropdown(dropdownEl, trigger) {
   if (_backdropEl) { _backdropEl.remove(); _backdropEl = null; }
   if (dropdownEl) dropdownEl.style.display = 'none';
@@ -22,6 +28,11 @@ function _closeDropdown(dropdownEl, trigger) {
 }
 
 export function mount(container, params = {}) {
+  // A re-mount (tab switch or live status change) supersedes any prior listener
+  // and closes a dropdown left open on the previous render.
+  if (_unsubLobby) { _unsubLobby(); _unsubLobby = null; }
+  if (_backdropEl) { _backdropEl.remove(); _backdropEl = null; }
+
   const roomCode = params.roomCode || state.get('roomCode');
   const lobby = state.get('roomLobby') || {};
   const locked = lobby.status === 'night-ended';
@@ -236,9 +247,18 @@ export function mount(container, params = {}) {
   }
 
   renderRegion();
+
+  // Re-mount when the night is locked/unlocked underneath us so the heading,
+  // top-bar title, and "called" state stay in sync (the host can trigger this
+  // from the recap tab itself via "Call it a Night").
+  _unsubLobby = state.on('roomLobby', (newLobby) => {
+    const newLocked = (newLobby?.status === 'night-ended');
+    if (newLocked !== locked) mount(container, { roomCode });
+  });
 }
 
 export function unmount() {
+  if (_unsubLobby) { _unsubLobby(); _unsubLobby = null; }
   if (_backdropEl) { _backdropEl.remove(); _backdropEl = null; }
 }
 
