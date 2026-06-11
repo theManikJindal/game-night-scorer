@@ -166,12 +166,15 @@ export function unwatchConnection() {
 
 // ── Player Management ──
 
-export async function addPlayer(roomCode, name, seatOrder, accentIndex) {
+export async function addPlayer(roomCode, name, seatOrder, accentIndex, existingId = null) {
   if (!db) return;
-  const array = new Uint32Array(1);
-  crypto.getRandomValues(array);
-  const randomSuffix = array[0].toString(36).substring(0, 4);
-  const id = `p_${Date.now()}_${randomSuffix}`;
+  let id = existingId;
+  if (!id) {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const randomSuffix = array[0].toString(36).substring(0, 4);
+    id = `p_${Date.now()}_${randomSuffix}`;
+  }
   await db.ref(`rooms/${roomCode}/players/${id}`).set({
     id,
     name: name.toUpperCase(),

@@ -219,6 +219,78 @@ async function _addPlayer(container, roomCode) {
   while (usedAccents.has(accentIndex)) accentIndex++;
   const seatOrder = playerArr.reduce((max, p) => Math.max(max, p.seatOrder ?? -1), -1) + 1;
 
+  const prevPlayer = _findPreviousPlayer(nameUpper);
+  if (prevPlayer) {
+    _showRejoinModal(container, roomCode, prevPlayer, nameUpper, seatOrder, accentIndex);
+    return;
+  }
+
+  await _continueAddPlayer(container, roomCode, nameUpper, seatOrder, accentIndex, null);
+}
+
+// Returns the most-recently-seen snapshot entry for a player with this name who
+// is no longer in the current roster, or null if no such player exists.
+function _findPreviousPlayer(nameUpper) {
+  const games = state.get('games') || {};
+  const currentIds = new Set(Object.keys(state.get('players') || {}));
+  let found = null;
+  for (const game of Object.values(games)) {
+    if (!game.playerSnapshot) continue;
+    for (const [pid, p] of Object.entries(game.playerSnapshot)) {
+      if (p.name === nameUpper && !currentIds.has(pid)) {
+        found = { playerId: pid, accentIndex: p.accentIndex ?? 0 };
+      }
+    }
+  }
+  return found;
+}
+
+function _showRejoinModal(container, roomCode, prevPlayer, nameUpper, seatOrder, accentIndex) {
+  const modalEl = document.createElement('div');
+  modalEl.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);';
+
+  modalEl.innerHTML = `
+    <div class="w-full max-w-sm bg-surface-container-low border border-outline shadow-lg">
+      <div class="px-5 pt-5 pb-4 border-b border-outline-variant">
+        <h2 class="font-headline font-extrabold text-xl uppercase">Returning Player?</h2>
+      </div>
+      <div class="px-5 py-4">
+        <p class="font-headline text-base leading-snug">
+          ${escapeHTML(nameUpper)} played here earlier tonight. Is this the same person?
+        </p>
+      </div>
+      <div class="px-5 pb-5 flex gap-3 border-t border-outline-variant pt-4">
+        <button id="rejoin-rename" type="button" aria-label="Change name" class="btn-secondary flex-none flex items-center justify-center self-stretch" style="padding:0;background:#f4f4f2">
+          <span class="material-symbols-outlined" style="font-size:1.25rem">close</span>
+        </button>
+        <button id="rejoin-confirm" type="button" class="btn-primary" style="flex:3">SAME PLAYER</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modalEl);
+  document.body.style.overflow = 'hidden';
+
+  const renameBtn = modalEl.querySelector('#rejoin-rename');
+  requestAnimationFrame(() => { renameBtn.style.width = renameBtn.offsetHeight + 'px'; });
+
+  const _close = () => { modalEl.remove(); document.body.style.overflow = ''; };
+
+  renameBtn.addEventListener('click', () => {
+    _close();
+    const input = container.querySelector('#input-player-name');
+    if (input) { input.focus(); input.select(); }
+  });
+
+  modalEl.querySelector('#rejoin-confirm').addEventListener('click', () => {
+    _close();
+    _continueAddPlayer(container, roomCode, nameUpper, seatOrder, accentIndex, prevPlayer.playerId);
+  });
+}
+
+// Shared path for both new and returning players after the rejoin prompt is resolved.
+// existingId is null for new players; the old player's ID for returning ones.
+async function _continueAddPlayer(container, roomCode, nameUpper, seatOrder, accentIndex, existingId) {
   // Mid-game joins only apply while a game is actually in progress (status
   // 'active'). A finished/abandoned game is frozen — adding then just rosters
   // the player for the next game (no prize-split modal, no game mutation).
@@ -232,18 +304,19 @@ async function _addPlayer(container, roomCode) {
       return;
     }
     if (game.status === 'active' && game.type === 'flip7' && game.config?.jua) {
-      input.value = '';
+      const input = container.querySelector('#input-player-name');
+      if (input) input.value = '';
       _showSuggestions(container, roomCode);
-      _showJuaPrizeSplitModal(container, roomCode, lobby.activeGameId, game.config, game.playerIds || [], nameUpper, seatOrder, accentIndex);
+      _showJuaPrizeSplitModal(container, roomCode, lobby.activeGameId, game.config, game.playerIds || [], nameUpper, seatOrder, accentIndex, existingId);
       return;
     }
   }
 
   try {
-    const newPlayerId = await fb.addPlayer(roomCode, name, seatOrder, accentIndex);
+    const newPlayerId = await fb.addPlayer(roomCode, nameUpper, seatOrder, accentIndex, existingId);
     _savePlayerName(nameUpper);
-    input.value = '';
-    input.focus();
+    const input = container.querySelector('#input-player-name');
+    if (input) { input.value = ''; input.focus(); }
     _showSuggestions(container, roomCode);
 
     if (lobby.status === 'playing' && lobby.activeGameId && newPlayerId) {
@@ -562,7 +635,7 @@ function _showSuggestions(container, roomCode) {
   });
 }
 
-function _showJuaPrizeSplitModal(container, roomCode, gameId, config, prevPlayerIds, playerName, seatOrder, accentIndex) {
+function _showJuaPrizeSplitModal(container, roomCode, gameId, config, prevPlayerIds, playerName, seatOrder, accentIndex, existingId = null) {
   const newPlayerCount = prevPlayerIds.length + 1;
   const buyIn = config.juaBuyIn || 30;
   const totalPot = buyIn * newPlayerCount;
@@ -672,7 +745,7 @@ function _showJuaPrizeSplitModal(container, roomCode, gameId, config, prevPlayer
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'ADDING…';
     try {
-      const newPlayerId = await fb.addPlayer(roomCode, playerName, seatOrder, accentIndex);
+      const newPlayerId = await fb.addPlayer(roomCode, playerName, seatOrder, accentIndex, existingId);
       _savePlayerName(playerName);
       await fb.addPlayerToGame(roomCode, gameId, newPlayerId, playerName, accentIndex, prevPlayerIds);
       await fb.updateGameConfig(roomCode, gameId, { juaPrize1: prize1, juaPrize2: prize2 });
