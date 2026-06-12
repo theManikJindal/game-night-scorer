@@ -26,7 +26,7 @@ function flip7Tabs(game) {
   const lobby = state.get('roomLobby') || {};
   const games = state.get('games') || {};
   const trackStats = lobby.trackStats !== false;
-  const hasPlayedGames = Object.values(games).some((g) => g.rounds && Object.keys(g.rounds).length > 0);
+  const hasPlayedGames = Object.values(games).some((g) => g.status === 'finished');
 
   const tabs = [LOBBY_TAB];
 
@@ -45,8 +45,7 @@ function flip7Tabs(game) {
     }
   }
 
-  // Night recap appears once there's something to show (stats tracking on and
-  // at least one game played).
+  // Night recap appears once at least one game has fully ended.
   if (trackStats && hasPlayedGames) {
     tabs.push({ id: 'recap', icon: 'bar_chart', label: 'RECAP' });
   }
