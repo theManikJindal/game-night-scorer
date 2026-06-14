@@ -192,6 +192,14 @@ export function renderTopBarActions(roomCode) {
   const actionsEl = document.getElementById('top-bar-actions');
   if (!actionsEl) return;
 
+  // Role chip: tells the user whether they're driving the game (host) or watching
+  // (spectator). Lives in its own centered header slot between the title and the
+  // action buttons. Both variants share the same outlined style.
+  const roleEl = document.getElementById('top-bar-role');
+  if (roleEl) {
+    roleEl.innerHTML = `<span class="font-mono text-xs uppercase tracking-widest px-2 py-0.5 border border-outline text-outline">${state.isHost() ? 'HOST' : 'SPECTATOR'}</span>`;
+  }
+
   actionsEl.innerHTML = `
     <button id="btn-qr-share" aria-label="Show QR code" title="Share room QR" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1" style="font-size:1.375rem">qr_code_2</button>
     ${showMenu
