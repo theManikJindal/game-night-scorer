@@ -57,8 +57,12 @@ export async function requestBecomeHost(roomCode) {
   }
 
   if (lobby.hostChangeRequest) {
-    toast.show('A host change is already in progress');
-    return;
+    const req = lobby.hostChangeRequest;
+    const isStale = typeof req.requestedAt === 'number' && Date.now() - req.requestedAt > 30000;
+    if (!isStale) {
+      toast.show('A host change is already in progress');
+      return;
+    }
   }
 
   if (_myRequestKey) return; // we already have a request in flight
@@ -191,21 +195,22 @@ function _showHostDialog(roomCode, req) {
         <p class="font-headline font-extrabold text-xl uppercase">Change Host</p>
       </div>
       <div class="px-5 pt-4 pb-2">
-        <p class="font-body font-bold text-base text-on-surface uppercase">Another player wants to be the host.</p>
+        <p class="font-body font-bold text-base text-on-surface">Another player wants to be the host.</p>
       </div>
       <label id="ht-block-row" class="flex items-center gap-3 px-5 pt-4 pb-1 cursor-pointer select-none">
         <input id="ht-block" type="checkbox" class="peer sr-only">
         <span aria-hidden="true" class="shrink-0 w-5 h-5 border border-primary bg-surface-container-lowest peer-checked:bg-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary flex items-center justify-center">
           <span class="material-symbols-outlined" style="font-size:16px;color:#fff;font-variation-settings:'wght' 700">check</span>
         </span>
-        <span class="font-headline font-bold text-sm uppercase">Decline all requests for 5 minutes</span>
+        <span class="font-headline font-bold text-sm">Decline all requests for 5 minutes</span>
       </label>
-      <div class="px-5 pb-5 pt-3 flex gap-2">
+      <div class="px-5 pt-3 pb-5 flex gap-2">
         <button id="ht-decline" type="button" aria-label="Decline" class="btn-secondary flex-none flex items-center justify-center self-stretch" style="padding:0;background:#f4f4f2">
           <span class="material-symbols-outlined" style="font-size:20px">close</span>
         </button>
-        <button id="ht-accept" type="button" class="btn-primary" style="flex:3">Auto Accept (${HOST_COUNTDOWN_SECONDS})</button>
+        <button id="ht-accept" type="button" class="btn-primary" style="flex:3">Auto-accept (${HOST_COUNTDOWN_SECONDS})</button>
       </div>
+      <p id="ht-countdown" class="text-sm font-body px-5 pb-5 text-center text-error" hidden>Auto-accept in ${HOST_COUNTDOWN_SECONDS} seconds.</p>
     </div>
   `;
   document.body.appendChild(el);
@@ -215,6 +220,7 @@ function _showHostDialog(roomCode, req) {
   const acceptBtn = el.querySelector('#ht-accept');
   const declineBtn = el.querySelector('#ht-decline');
   const blockCheckbox = el.querySelector('#ht-block');
+  const countdownEl = el.querySelector('#ht-countdown');
 
   const accept = async () => {
     _closeHostDialog();
@@ -235,33 +241,71 @@ function _showHostDialog(roomCode, req) {
     }
   };
 
-  acceptBtn.addEventListener('click', accept);
+  let acceptClickHandler = accept;
+  acceptBtn.addEventListener('click', () => acceptClickHandler());
   declineBtn.addEventListener('click', decline);
 
+  let remaining = HOST_COUNTDOWN_SECONDS;
+  let blockedMode = false;
+
+  const setAcceptLabel = () => {
+    acceptBtn.innerHTML = `Auto-accept (<span style="display:inline-block">${remaining}</span>)`;
+  };
+
+  const setCountdownText = () => {
+    countdownEl.innerHTML = `Auto-accept in <span style="display:inline-block">${remaining}</span> seconds.`;
+  };
+
+  const animateNum = (el) => {
+    const span = el.querySelector('span');
+    if (span) span.animate([{ transform: 'scale(1.25)' }, { transform: 'scale(1)' }], { duration: 350, easing: 'ease-out' });
+  };
+
   const startCountdown = () => {
-    let remaining = HOST_COUNTDOWN_SECONDS;
-    acceptBtn.textContent = `Auto Accept (${remaining})`;
+    if (_hostCountdownTimer) { clearInterval(_hostCountdownTimer); _hostCountdownTimer = null; }
+    remaining = HOST_COUNTDOWN_SECONDS;
+    blockedMode = false;
+    countdownEl.hidden = true;
+    setAcceptLabel();
     _hostCountdownTimer = setInterval(() => {
       remaining -= 1;
       if (remaining <= 0) {
-        acceptBtn.textContent = 'Accepting…';
+        if (blockedMode) { countdownEl.textContent = 'Accepting…'; } else { acceptBtn.textContent = 'Accepting…'; }
         accept();
         return;
       }
-      acceptBtn.textContent = `Auto Accept (${remaining})`;
+      if (blockedMode) {
+        setCountdownText();
+        animateNum(countdownEl);
+      } else {
+        setAcceptLabel();
+        animateNum(acceptBtn);
+      }
     }, 1000);
   };
 
-  // Ticking "decline all requests" signals intent to refuse — disable Auto Accept
-  // and halt its countdown so it can't fire while the box is checked.
+  // Checking "decline all requests" switches the live countdown from the button
+  // to the red line below; unchecking switches it back. The interval keeps running.
+  const btnRow = acceptBtn.parentElement;
+
   blockCheckbox.addEventListener('change', () => {
     if (blockCheckbox.checked) {
-      if (_hostCountdownTimer) { clearInterval(_hostCountdownTimer); _hostCountdownTimer = null; }
-      acceptBtn.disabled = true;
-      acceptBtn.textContent = `Auto Accept (${HOST_COUNTDOWN_SECONDS})`;
+      blockedMode = true;
+      setCountdownText();
+      countdownEl.hidden = false;
+      btnRow.style.paddingBottom = '0.5rem';
+      declineBtn.style.display = 'none';
+      acceptBtn.style.flex = '1 1 100%';
+      acceptBtn.textContent = 'Decline';
+      acceptClickHandler = decline;
     } else {
-      acceptBtn.disabled = false;
-      startCountdown();
+      blockedMode = false;
+      countdownEl.hidden = true;
+      btnRow.style.paddingBottom = '';
+      declineBtn.style.display = '';
+      acceptBtn.style.flex = '3';
+      setAcceptLabel();
+      acceptClickHandler = accept;
     }
   });
 

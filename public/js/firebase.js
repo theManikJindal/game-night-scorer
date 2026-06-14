@@ -310,9 +310,16 @@ export async function saveLiveRoundCAS(roomCode, gameId, pid, baseVersion, newEn
   return { ok: result.committed };
 }
 
-export async function updateJuaFines(roomCode, gameId, fines) {
+export async function updateJuaFines(roomCode, gameId, fines, finesRound = null) {
   if (!db) return;
-  await db.ref(`rooms/${roomCode}/games/${gameId}/juaFines`).set(fines);
+  if (finesRound !== null) {
+    await db.ref().update({
+      [`rooms/${roomCode}/games/${gameId}/juaFines`]: fines,
+      [`rooms/${roomCode}/games/${gameId}/juaFinesRound`]: finesRound,
+    });
+  } else {
+    await db.ref(`rooms/${roomCode}/games/${gameId}/juaFines`).set(fines);
+  }
 }
 
 export async function adjustTotals(roomCode, gameId, newTotals) {

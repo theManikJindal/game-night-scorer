@@ -11,7 +11,6 @@ import * as toast from './toast.js';
 import * as cache from '../cache.js';
 import * as qrModal from './qr-modal.js';
 import * as hostTransfer from './host-transfer.js';
-import { getGame } from '../games/registry.js';
 
 let _bound = false;
 
@@ -192,33 +191,21 @@ export function renderTopBarActions(roomCode) {
   const actionsEl = document.getElementById('top-bar-actions');
   if (!actionsEl) return;
 
+  // Role chip: tells the user whether they're driving the game (host) or watching
+  // (spectator). Lives in its own centered header slot between the title and the
+  // action buttons. Both variants share the same outlined style.
+  const roleEl = document.getElementById('top-bar-role');
+  if (roleEl) {
+    roleEl.innerHTML = `<span class="font-mono text-xs uppercase tracking-widest px-2 py-0.5 border border-outline text-outline">${state.isHost() ? 'HOST' : 'SPECTATOR'}</span>`;
+  }
+
   actionsEl.innerHTML = `
-    <button id="btn-copy-link" aria-label="Copy join link" title="Copy join link"
-      class="font-mono text-xs text-outline border border-outline px-2 py-1 hover:bg-surface-container-high transition-colors">
-      ${roomCode}
-    </button>
-    <button id="btn-qr-share" aria-label="Show QR code" title="Share room QR" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1 ml-1" style="font-size:1.375rem">qr_code_2</button>
+    <button id="btn-qr-share" aria-label="Show QR code" title="Share room QR" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1" style="font-size:1.375rem">qr_code_2</button>
     ${showMenu
       ? `<button id="btn-host-menu-trigger" aria-label="Open menu" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1 ml-1" style="font-size:1.375rem">more_vert</button>`
       : ''
     }
   `;
-
-  // Copy join link to clipboard
-  const copyBtn = document.getElementById('btn-copy-link');
-  if (copyBtn) {
-    copyBtn.addEventListener('click', async () => {
-      const url = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
-      try {
-        await navigator.clipboard.writeText(url);
-        const orig = copyBtn.textContent.trim();
-        copyBtn.textContent = 'COPIED!';
-        setTimeout(() => { copyBtn.textContent = orig; }, 1500);
-      } catch {
-        toast.show('Could not copy link');
-      }
-    });
-  }
 
   // Bind QR share button (visible to both host and viewer)
   const qrBtn = document.getElementById('btn-qr-share');
@@ -245,43 +232,9 @@ function _leaveRoom(roomCode) {
 
 async function _endGameWithWinner(roomCode) {
   const game = state.currentGame();
-  if (!game) {
-    fb.setRoomStatus(roomCode, 'waiting');
-    toast.show('Game ended');
-    return;
-  }
-
-  const gameModule = getGame(game.type);
-  const totals = game.totals || {};
-  const playerIds = game.playerIds || [];
-  const rounds = Object.keys(game.rounds || {}).length;
-
-  // No rounds played (or unknown game) — mark the game itself abandoned so it
-  // doesn't linger as 'active' under activeGameId, then return the room to waiting.
-  if (rounds === 0 || !gameModule) {
+  if (game) {
     await fb.submitGameAbandon(roomCode, game.gameId);
-    fb.setRoomStatus(roomCode, 'waiting');
-    toast.show('Game ended');
-    return;
   }
-
-  // Compute standings to find if there's a clear leader
-  const standings = gameModule.deriveStandings(totals, playerIds);
-  const rank1Players = standings.filter((s) => s.rank === 1);
-
-  if (rank1Players.length === 1) {
-    // Clear leader — set them as winner, mark game finished
-    await fb.submitGameEnd(roomCode, game.gameId, rank1Players[0].playerId);
-    toast.show(`Game ended — ${_winnerName(game, rank1Players[0].playerId)} wins`);
-  } else {
-    // Tied or inconclusive — mark as abandoned
-    await fb.submitGameAbandon(roomCode, game.gameId);
-    toast.show('Game ended (no clear winner)');
-  }
-
   fb.setRoomStatus(roomCode, 'waiting');
-}
-
-function _winnerName(game, playerId) {
-  return game.playerSnapshot?.[playerId]?.name || playerId;
+  toast.show('Game ended');
 }
