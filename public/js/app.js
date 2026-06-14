@@ -58,7 +58,7 @@ async function init() {
   if (soundBtn) {
     const sound = new Audio('sounds/fahhh.mp3');
     soundBtn.addEventListener('click', () => {
-      sound.currentTime = 0;
+      sound.currentTime = 0.2;
       sound.play().catch(() => { /* autoplay/file-missing — ignore */ });
     });
   }

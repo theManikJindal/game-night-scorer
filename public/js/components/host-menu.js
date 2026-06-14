@@ -193,32 +193,12 @@ export function renderTopBarActions(roomCode) {
   if (!actionsEl) return;
 
   actionsEl.innerHTML = `
-    <button id="btn-copy-link" aria-label="Copy join link" title="Copy join link"
-      class="font-mono text-xs text-outline border border-outline px-2 py-1 hover:bg-surface-container-high transition-colors">
-      ${roomCode}
-    </button>
-    <button id="btn-qr-share" aria-label="Show QR code" title="Share room QR" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1 ml-1" style="font-size:1.375rem">qr_code_2</button>
+    <button id="btn-qr-share" aria-label="Show QR code" title="Share room QR" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1" style="font-size:1.375rem">qr_code_2</button>
     ${showMenu
       ? `<button id="btn-host-menu-trigger" aria-label="Open menu" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-1 ml-1" style="font-size:1.375rem">more_vert</button>`
       : ''
     }
   `;
-
-  // Copy join link to clipboard
-  const copyBtn = document.getElementById('btn-copy-link');
-  if (copyBtn) {
-    copyBtn.addEventListener('click', async () => {
-      const url = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
-      try {
-        await navigator.clipboard.writeText(url);
-        const orig = copyBtn.textContent.trim();
-        copyBtn.textContent = 'COPIED!';
-        setTimeout(() => { copyBtn.textContent = orig; }, 1500);
-      } catch {
-        toast.show('Could not copy link');
-      }
-    });
-  }
 
   // Bind QR share button (visible to both host and viewer)
   const qrBtn = document.getElementById('btn-qr-share');
