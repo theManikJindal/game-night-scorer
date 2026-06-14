@@ -120,10 +120,14 @@ export function confirmRoundDialog(playerScores, options = {}) {
 
 /**
  * Confirm dialog for saving edits.
- * changes: Array of { name, beforeScore, beforeFirstSave, afterScore, afterFirstSave, flip7 }.
- * Returns Promise<boolean>.
+ * changes: Array of { name, beforeScore, beforeFirstSave, beforeFlip7, afterScore, afterFirstSave, afterFlip7 }.
+ * options.discardMode: when true the dialog is used to leave an edit with unsaved
+ *   changes — the close button is replaced by a trash/discard button and the
+ *   promise resolves to 'save' or 'discard' (backdrop click is disabled so the
+ *   host must make a choice). Otherwise resolves Promise<boolean>.
  */
-export function confirmSaveDialog(changes) {
+export function confirmSaveDialog(changes, options = {}) {
+  const discardMode = !!options.discardMode;
   const scoreLabel = (score, firstSave, flip7) => {
     const parts = [];
     if (flip7) parts.push('🔥');
@@ -155,17 +159,23 @@ export function confirmSaveDialog(changes) {
               ${changes.map((p) => `
                 <tr class="border-b border-outline-variant last:border-0">
                   <td class="px-3 py-2 font-headline font-bold text-base uppercase truncate">${escapeHTML(p.name)}</td>
-                  <td class="px-3 py-2 font-mono font-bold text-base text-right whitespace-nowrap">${scoreLabel(p.beforeScore, p.beforeFirstSave, p.flip7)}</td>
-                  <td class="px-3 py-2 font-mono font-bold text-base text-right whitespace-nowrap">${scoreLabel(p.afterScore, p.afterFirstSave, p.flip7)}</td>
+                  <td class="px-3 py-2 font-mono font-bold text-base text-right whitespace-nowrap">${scoreLabel(p.beforeScore, p.beforeFirstSave, p.beforeFlip7)}</td>
+                  <td class="px-3 py-2 font-mono font-bold text-base text-right whitespace-nowrap">${scoreLabel(p.afterScore, p.afterFirstSave, p.afterFlip7)}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
         </div>
         <div class="px-5 pb-5 pt-3 flex gap-2">
+          ${discardMode ? `
+          <button id="csd-discard" type="button" aria-label="Discard changes" title="Discard changes" class="btn-secondary flex-none flex items-center justify-center self-stretch" style="padding:0;background:#f4f4f2">
+            <span class="material-symbols-outlined" style="font-size:1.25rem">delete</span>
+          </button>
+          ` : `
           <button id="csd-cancel" type="button" aria-label="Cancel" class="btn-secondary flex-none flex items-center justify-center self-stretch" style="padding:0;background:#f4f4f2">
             <span class="material-symbols-outlined" style="font-size:1.25rem">close</span>
           </button>
+          `}
           <button id="csd-confirm" type="button" class="btn-primary" style="flex:3">SAVE</button>
         </div>
       </div>
@@ -180,10 +190,18 @@ export function confirmSaveDialog(changes) {
       resolve(result);
     };
 
-    el.querySelector('#csd-backdrop').addEventListener('click', () => cleanup(false));
-    const csdCancel = el.querySelector('#csd-cancel');
-    csdCancel.addEventListener('click', () => cleanup(false));
-    el.querySelector('#csd-confirm').addEventListener('click', () => cleanup(true));
-    requestAnimationFrame(() => { csdCancel.style.width = csdCancel.offsetHeight + 'px'; });
+    if (discardMode) {
+      const csdDiscard = el.querySelector('#csd-discard');
+      csdDiscard.addEventListener('click', () => cleanup('discard'));
+      el.querySelector('#csd-confirm').addEventListener('click', () => cleanup('save'));
+      // No backdrop dismissal: the host must choose save or discard before leaving.
+      requestAnimationFrame(() => { csdDiscard.style.width = csdDiscard.offsetHeight + 'px'; });
+    } else {
+      el.querySelector('#csd-backdrop').addEventListener('click', () => cleanup(false));
+      const csdCancel = el.querySelector('#csd-cancel');
+      csdCancel.addEventListener('click', () => cleanup(false));
+      el.querySelector('#csd-confirm').addEventListener('click', () => cleanup(true));
+      requestAnimationFrame(() => { csdCancel.style.width = csdCancel.offsetHeight + 'px'; });
+    }
   });
 }
