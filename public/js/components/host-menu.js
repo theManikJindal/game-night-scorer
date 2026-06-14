@@ -11,7 +11,6 @@ import * as toast from './toast.js';
 import * as cache from '../cache.js';
 import * as qrModal from './qr-modal.js';
 import * as hostTransfer from './host-transfer.js';
-import { getGame } from '../games/registry.js';
 
 let _bound = false;
 
@@ -233,43 +232,9 @@ function _leaveRoom(roomCode) {
 
 async function _endGameWithWinner(roomCode) {
   const game = state.currentGame();
-  if (!game) {
-    fb.setRoomStatus(roomCode, 'waiting');
-    toast.show('Game ended');
-    return;
-  }
-
-  const gameModule = getGame(game.type);
-  const totals = game.totals || {};
-  const playerIds = game.playerIds || [];
-  const rounds = Object.keys(game.rounds || {}).length;
-
-  // No rounds played (or unknown game) — mark the game itself abandoned so it
-  // doesn't linger as 'active' under activeGameId, then return the room to waiting.
-  if (rounds === 0 || !gameModule) {
+  if (game) {
     await fb.submitGameAbandon(roomCode, game.gameId);
-    fb.setRoomStatus(roomCode, 'waiting');
-    toast.show('Game ended');
-    return;
   }
-
-  // Compute standings to find if there's a clear leader
-  const standings = gameModule.deriveStandings(totals, playerIds);
-  const rank1Players = standings.filter((s) => s.rank === 1);
-
-  if (rank1Players.length === 1) {
-    // Clear leader — set them as winner, mark game finished
-    await fb.submitGameEnd(roomCode, game.gameId, rank1Players[0].playerId);
-    toast.show(`Game ended — ${_winnerName(game, rank1Players[0].playerId)} wins`);
-  } else {
-    // Tied or inconclusive — mark as abandoned
-    await fb.submitGameAbandon(roomCode, game.gameId);
-    toast.show('Game ended (no clear winner)');
-  }
-
   fb.setRoomStatus(roomCode, 'waiting');
-}
-
-function _winnerName(game, playerId) {
-  return game.playerSnapshot?.[playerId]?.name || playerId;
+  toast.show('Game ended');
 }
