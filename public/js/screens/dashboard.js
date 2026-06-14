@@ -437,6 +437,12 @@ function _render(container, roomCode) {
   html += `<div class="flex flex-col gap-1">`;
   orderedStandings.forEach((s) => {
     const p = snapshot[s.playerId] || {};
+    const rawFineCount = game.juaFines?.[s.playerId] || 0;
+    const fineAddedAtRound = game.juaFinesRound?.[s.playerId] ?? null;
+    // Hide the fine chip in 'none' mode unless the fine was added in the current
+    // (unconfirmed) round. null means no tracking data — default to showing.
+    const fineIsCurrentRound = fineAddedAtRound === null || fineAddedAtRound >= rounds.length;
+    const effectiveFineCount = (_roundsDisplayMode === 'none' && !fineIsCurrentRound) ? 0 : rawFineCount;
     if (isFlip7Host) {
       // Tappable row — host enters cards via drawer
       const liveFirstSave = !!game.config?.jua && !!game.liveRound?.[s.playerId]?.firstSave;
@@ -447,7 +453,7 @@ function _render(container, roomCode) {
         _editScoresMode ? (displayRoundFlip7Meta[s.playerId] || []) : _applyRoundsDisplayLimit(displayRoundFlip7Meta[s.playerId] || []),
         _editScoresMode ? (roundJuaMeta[s.playerId] || []) : _applyRoundsDisplayLimit(roundJuaMeta[s.playerId] || []),
         liveFirstSave,
-        _editScoresMode ? 0 : (game.juaFines?.[s.playerId] || 0),
+        _editScoresMode ? 0 : effectiveFineCount,
         game.liveRound?.[s.playerId] || null
       );
     } else {
@@ -474,7 +480,7 @@ function _render(container, roomCode) {
         progressPct: getProgress(s.total),
         isLeader: s.rank === 1,
         winMode: gameModule.winMode,
-        fineCount: game.juaFines?.[s.playerId] || 0,
+        fineCount: effectiveFineCount,
       });
       if (spectatorCanScore) {
         html += `<div class="flip7-spectator-row cursor-pointer" role="button" tabindex="0" data-player-id="${escapeHTML(s.playerId)}" aria-label="Score ${escapeHTML(p.name || s.playerId)}">${rowHtml}</div>`;
@@ -1672,7 +1678,8 @@ function _openJuaFineCounter(pid, game, roomCode) {
     countEl.textContent = fineCount;
     rupeesEl.textContent = `₹${_totalRupees()}`;
     subBtn.disabled = fineCount === 0;
-    fb.updateJuaFines(roomCode, game.gameId, { ...(game.juaFines || {}), [pid]: fineCount }).catch(() => {});
+    const confirmedRoundCount = Object.keys(game.rounds || {}).length;
+    fb.updateJuaFines(roomCode, game.gameId, { ...(game.juaFines || {}), [pid]: fineCount }, { ...(game.juaFinesRound || {}), [pid]: confirmedRoundCount }).catch(() => {});
   };
 
   _juaModalEl.querySelector('#jua-fine-add').addEventListener('click', () => { fineCount++; _refresh(); });
